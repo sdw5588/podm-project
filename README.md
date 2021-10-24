@@ -2,3 +2,7 @@
 
 # Authors
 Shayne Winn
+
+Josh Samplatsky
+
+Alex Moon
