@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="14.3.0">
+  <zoom_level>8</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1144</x>
+      <y>0</y>
+      <w>272</w>
+      <h>240</h>
+    </coordinates>
+    <panel_attributes>halign=left
+Hello ${name}!
+1 - My Tools
+2 - Tool Requests</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>432</x>
+      <y>288</y>
+      <w>272</w>
+      <h>240</h>
+    </coordinates>
+    <panel_attributes>halign=left
+Tools:
+=====
+[list of tools]
+=====
+? - sort
+? - search
+1 - New Tool
+2 - Edit Tool
+3 - Delete Tool
+4 - My Categories
+5 - Back</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>552</x>
+      <y>232</y>
+      <w>744</w>
+      <h>72</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-
+1
+"my tools"</panel_attributes>
+    <additional_attributes>10.0;70.0;10.0;40.0;910.0;40.0;910.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>96</x>
+      <y>520</y>
+      <w>368</w>
+      <h>72</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-
+1
+"New Tool"</panel_attributes>
+    <additional_attributes>10.0;70.0;10.0;40.0;440.0;40.0;440.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>0</x>
+      <y>576</y>
+      <w>232</w>
+      <h>152</h>
+    </coordinates>
+    <panel_attributes>halign=left
+What is the name of the tool?
+A Description?
+Categories? (separated by ',')
+Purchace Date? (MM/DD/YYYY)
+Purchase Price?
+Would you like to share this tool? (y/n)
+
+${tool}
+Confirm? (y/n)</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>264</x>
+      <y>576</y>
+      <w>416</w>
+      <h>152</h>
+    </coordinates>
+    <panel_attributes>halign=left
+Barcode of the tool you would like to edit:
+What would you like to edit?
+[name, description, purchace date, purchase price, or shareable]
+
+New Value:
+
+${tool}
+Confirm? (y/n)</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>528</x>
+      <y>520</y>
+      <w>72</w>
+      <h>72</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-
+2
+"Edit Tool"</panel_attributes>
+    <additional_attributes>10.0;70.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>704</x>
+      <y>576</y>
+      <w>224</w>
+      <h>48</h>
+    </coordinates>
+    <panel_attributes>halign=left
+Barcode of the tool you would like to delete:
+${tool}
+Confirm? (y/n)</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>616</x>
+      <y>520</y>
+      <w>240</w>
+      <h>72</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-
+3
+"Delete Tool"</panel_attributes>
+    <additional_attributes>280.0;70.0;280.0;40.0;10.0;40.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>952</x>
+      <y>568</y>
+      <w>272</w>
+      <h>240</h>
+    </coordinates>
+    <panel_attributes>halign=left
+Categories:
+=====
+[list of Categories]
+=====
+1 - Create Category
+2 - Back</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>600</x>
+      <y>744</y>
+      <w>224</w>
+      <h>48</h>
+    </coordinates>
+    <panel_attributes>halign=left
+New Category Name:
+${category}
+Confirm? (y/n)</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>816</x>
+      <y>752</y>
+      <w>152</w>
+      <h>40</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-
+1
+"Create Category"</panel_attributes>
+    <additional_attributes>10.0;20.0;170.0;20.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>696</x>
+      <y>504</y>
+      <w>328</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+4
+"My Categories"</panel_attributes>
+    <additional_attributes>10.0;20.0;390.0;20.0;390.0;80.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1824</x>
+      <y>288</y>
+      <w>272</w>
+      <h>240</h>
+    </coordinates>
+    <panel_attributes>halign=left
+Requests:
+${=====
+[Incomming Requests]} only if there are requests
+=====
+[My Requests]
+=====
+
+1 - Search Tools
+2 - Sort Tools
+3 - Show All Tools
+4 - Return Tool
+5 - Incomming Requests
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+</diagram>

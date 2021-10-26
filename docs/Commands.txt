@@ -1,0 +1,49 @@
+BEFORE LOGIN:
+	login			- begin login prompt
+	createaccount		- begins the ccreate account prompt
+
+
+/==================================================================================\
+Welcome ${name}!
+
+notifications	(*)
+
+list my tools	(list by name, category, barcode, etc)
+search my tools	(search by anything)
+add tools	(create a new tool and add it to categories)
+edit my tools	(edit + delete)
+create category
+
+create borrow request	(pull up a menu that allows you to search all tools)
+manage requests
+
+\==================================================================================/
+
+
+my tools =>
+/==================================================================================\
+
+Tools:
+[list of tools]
+
+What would you like to do?
+- sort => 
+- create tool
+- edit tool
+- delete tool
+- edit categories
+
+\==================================================================================/
+
+
+
+
+ONCE LOGGED IN:
+	tools
+		-list						- list all tools
+		-search	[barcode, name, category] (param)	- search tools by a given param
+
+	tool
+		-add	"(name)" "(description)" (pur-date) (pur-price) (shareable)
+		-edit	(barcode) [name, description, pur-date, pur-price, shareable] (value)
+		-delete	
