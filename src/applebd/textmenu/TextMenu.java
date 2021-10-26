@@ -14,11 +14,14 @@ public class TextMenu extends TextMenuItem {
     Runnable printHeader;
 
     public TextMenu(String title, String header, TextMenuItem ... items) {
-        this(title, header, false, items);
+        this(title, header, true, items);
+    }
+    public TextMenu(String title, Runnable header, TextMenuItem ... items) {
+        this(title, header, true, items);
     }
 
     public TextMenu(String title, String header, boolean addBack, TextMenuItem ... items) {
-        this(title, () -> System.out.print(header), addBack, items);
+        this(title, () -> System.out.println(header), addBack, items);
     }
 
     public TextMenu(String title, Runnable printHeader, boolean addBack, TextMenuItem ... items) {
@@ -38,7 +41,7 @@ public class TextMenu extends TextMenuItem {
     private void display() {
 
         int option = 1;
-        System.out.print("--~=={ "); this.printHeader.run(); System.out.print(" }==~--\n");
+        this.printHeader.run();
         for (TextMenuItem item : items) {
             System.out.println((option++)+" - "+item.getTitle());
         }
