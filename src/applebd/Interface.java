@@ -1,5 +1,6 @@
 package applebd;
 
+import java.util.Collections;
 import java.util.Vector;
 
 public class Interface {
@@ -32,20 +33,20 @@ public class Interface {
     }
 
     public class Tool {
-        public final String     name;
-        public final String     description;
-        public final String     barcode;
-        public final String[]   categories;
-        public final Date       purDate;
-        public final float      purPrice;
-        public final Boolean    shareable;
+        public final String         name;
+        public final String         description;
+        public final String         barcode;
+        public final Vector<String> categories;
+        public final Date           purDate;
+        public final float          purPrice;
+        public final Boolean        shareable;
 
-        public Tool(String name, String description, String[] categories,
+        public Tool(String name, String description, Vector<String> categories,
                     Date purDate, float purPrice, Boolean shareable) {
             this(name, description, null, categories, purDate, purPrice, shareable);
         }
 
-        public Tool(String name, String description, String barcode, String[] categories,
+        public Tool(String name, String description, String barcode, Vector<String> categories,
                     Date purDate, float purPrice, Boolean shareable) {
             this.name = name;
             this.description = description;
@@ -54,6 +55,14 @@ public class Interface {
             this.purDate = purDate;
             this.purPrice = purPrice;
             this.shareable = shareable;
+        }
+
+        @Override
+        public String toString() {
+            return  name + '\t' +
+                    "[" + barcode + "]\t" +
+                    categories + "\t" +
+                    shareable;
         }
     }
 
@@ -75,6 +84,20 @@ public class Interface {
         if(username.equals("test") && password.equals("test")){
             return new User("test", "Johnny", "Test", "Johnny@test.best",
                     new Date(12, 2, 2000), new Date(1, 1, 1999)
+            );
+        }
+        return null;
+    }
+
+    public Tool getUserTool(User user, String barcode) {
+        if(barcode.equals("112358")){
+            Vector<String> categories = new Vector<>();
+            Collections.addAll(categories, "Test", "Fibonacci");
+            return new Tool (
+                    "test tool special", "this is the fibonacci test tool",
+                    barcode, categories,
+                    new Date(12, 2, 2000), 99.99f,
+                    true
             );
         }
         return null;
@@ -104,17 +127,28 @@ public class Interface {
         return false;
     }
 
+    public Boolean validateCategory(String category) {
+        return true;
+    }
+
     public Vector<Tool> getUserTools(User user) {
         Vector<Tool> tools = new Vector<>();
-        tools.add(new Tool("48-in Steel Digging Shovel", "This is a basic shovel", null,
+        Vector<String> testCategories1 = new Vector<>();
+        Collections.addAll(testCategories1, "Test", "Hand");
+        Vector<String> testCategories2 = new Vector<>();
+        Collections.addAll(testCategories2, "Test", "Power");
+
+        tools.add(new Tool("48-in Steel Digging Shovel", "This is a basic shovel",
+                "1123581029", testCategories1,
                 new Date(2, 28, 2015), 15.43f, true));
-        tools.add(new Tool("20-in Wood Transfer Shovel", "A fair shovel", null,
+        tools.add(new Tool("20-in Wood Transfer Shovel", "A fair shovel",
+                "1598468740", testCategories2,
                 new Date(5, 3, 2017), 25.99f, true));
 
         return tools;
     }
 
-    public Vector<String> getUserCategories(User user) {
+    public Vector<String> getCategories() {
         Vector<String> categories = new Vector<>();
         categories.add("Shovels");
         categories.add("Hammers");
