@@ -115,11 +115,15 @@ public class Interface {
         return null;
     }
 
+    private void executeStatement(String string) throws SQLException {
+        PreparedStatement statement = conn.prepareStatement(string);
+        statement.executeUpdate();
+    }
+
     public Boolean createTool(User user, Tool newTool) throws SQLException {
-        PreparedStatement statement = conn.prepareStatement(
+        executeStatement(
                 "INSERT INTO tool_info (barcode, tool_name, description, purchase_date, purchase_price, username) " +
                         String.format("VALUES (%s,%s,%s,%s,%s,%s);", newTool.barcode, newTool.name, newTool.description, newTool.purDate, newTool.purPrice, user.username));
-        statement.executeUpdate();
         return true;
     }
 
@@ -127,8 +131,9 @@ public class Interface {
         return false;
     }
 
-    public Boolean deleteTool(String barcode) {
-        return false;
+    public Boolean deleteTool(String barcode) throws SQLException {
+        executeStatement(String.format("DELETE FROM tool_info WHERE barcode='%s';", barcode));
+        return true;
     }
 
     public Boolean addToolToCategory(String barcode, String category) {
