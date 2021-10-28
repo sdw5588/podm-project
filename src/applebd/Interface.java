@@ -1,16 +1,27 @@
 package applebd;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Vector;
 
 public class Interface {
+    private Connection conn;
+
     public class Date {
+        // YYYY-MM-DD
         public int month;
         public int day;
         public int year;
 
         Date(int month, int day, int year){
             this.month = month; this.day = day; this.year = year;
+        }
+
+        @Override
+        public String toString() {
+            return (year + "-" + month + "-" + day);
         }
     }
 
@@ -72,8 +83,9 @@ public class Interface {
         CATEGORY,   // used in search + sort
     }
 
-    public Interface() {
+    public Interface(Connection conn) {
         // connect to database
+        this.conn = conn;
     }
 
     public Boolean verifyUsername(String username) {
@@ -103,8 +115,12 @@ public class Interface {
         return null;
     }
 
-    public Boolean createTool(User user, Tool newTool) {
-        return false;
+    public Boolean createTool(User user, Tool newTool) throws SQLException {
+        PreparedStatement statement = conn.prepareStatement(
+                "INSERT INTO tool_info (barcode, tool_name, description, purchase_date, purchase_price, username) " +
+                        String.format("VALUES (%s,%s,%s,%s,%s,%s);", newTool.barcode, newTool.name, newTool.description, newTool.purDate, newTool.purPrice, user.username));
+        statement.executeUpdate();
+        return true;
     }
 
     public Boolean editTool(String barcode, Tool newTool) {
