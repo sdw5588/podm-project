@@ -2,6 +2,7 @@ package applebd;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Vector;
@@ -117,6 +118,7 @@ public class Interface {
      * @param barcode - tool to get
      * @return Pair. Tool = the tool, User = tool owner
      */
+    /*
     public Pair<Tool, User> getTool(String barcode) {
         if(barcode.equals("112358")){
             Vector<String> categories = new Vector<>();
@@ -130,6 +132,7 @@ public class Interface {
         }
         return null;
     }
+     */
 
     private void executeStatement(String string) throws SQLException {
         PreparedStatement statement = conn.prepareStatement(string);
@@ -145,8 +148,8 @@ public class Interface {
      */
     public Boolean createTool(User user, Tool newTool) throws SQLException {
         executeStatement(
-                "INSERT INTO tool_info (barcode, tool_name, description, purchase_date, purchase_price, username) " +
-                        String.format("VALUES (%s,%s,%s,%s,%s,%s);", newTool.barcode, newTool.name, newTool.description, newTool.purDate, newTool.purPrice, user.username));
+                "INSERT INTO tool_info (tool_name, description, purchase_date, purchase_price, username) " +
+                        String.format("VALUES (%s,%s,%s,%s,%s,%s);", newTool.name, newTool.description, newTool.purDate, newTool.purPrice, user.username));
         return true;
     }
 
@@ -186,7 +189,7 @@ public class Interface {
     public Boolean addToolToCategory(String barcode, String category) throws SQLException {
         executeStatement(String.format("INSERT INTO tool_category (category_name, barcode) " +
                 "VALUES (%s,%s);", category, barcode ));
-        return false;
+        return true;
     }
 
     /**
@@ -206,8 +209,10 @@ public class Interface {
      * @param category - Category to add
      * @return - True on success
      */
-    public Boolean createCategory(String category) {
-        return false;
+    public Boolean createCategory(String category) throws SQLException {
+        executeStatement(String.format(
+                "INSERT INTO category (category_name) VALUES (%s);", category));
+        return true;
     }
 
     /**
@@ -215,8 +220,15 @@ public class Interface {
      * @param category - Name os the category to check
      * @return - Trus if it exists in the database, false oterwise
      */
-    public Boolean validateCategory(String category) {
-        return true;
+    public Boolean validateCategory(String category) throws SQLException {
+        PreparedStatement statement = conn.prepareStatement(String.format("SELECT COUNT(1) FROM category WHERE category_name = '%s';", category));
+        ResultSet result = statement.executeQuery();
+        result.next();
+        if (result.getInt(1) == 1) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public Vector<Tool> getUserTools(User user) {
