@@ -127,8 +127,12 @@ public class Interface {
         return true;
     }
 
-    public Boolean editTool(String barcode, Tool newTool) {
-        return false;
+    public Boolean editTool(String barcode, Tool newTool) throws SQLException {
+        executeStatement(
+                String.format("UPDATE tool_info " +
+                "SET tool_name=%s, description=%s, purchase_date=%s, purchase_price=%s" +
+                "WHERE barcode='%s';", newTool.name, newTool.description, newTool.purDate, newTool.purPrice, barcode));
+        return true;
     }
 
     public Boolean deleteTool(String barcode) throws SQLException {
@@ -136,12 +140,15 @@ public class Interface {
         return true;
     }
 
-    public Boolean addToolToCategory(String barcode, String category) {
+    public Boolean addToolToCategory(String barcode, String category) throws SQLException {
+        executeStatement(String.format("INSERT INTO tool_category (category_name, barcode) " +
+                "VALUES (%s,%s);", category, barcode ));
         return false;
     }
 
-    public Boolean removeCategoryFromTool(String barcode, String category) {
-        return false;
+    public Boolean removeCategoryFromTool(String barcode, String category) throws SQLException {
+        executeStatement(String.format("DELETE FROM tool_category WHERE barcode='%s' AND category_name='%s'", barcode, category));
+        return true;
     }
 
     public Boolean createCategory(User user, String category) {
