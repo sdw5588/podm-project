@@ -2,9 +2,11 @@ package applebd;
 
 import applebd.textmenu.TextMenu;
 import applebd.textmenu.TextMenuItem;
-import javafx.print.PrintSides;
+//import javafx.print.PrintSides;
 
 import java.io.*;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Vector;
 
@@ -14,6 +16,7 @@ public class App {
     private Interface anInterface;
     private Interface.User user;
     private Vector<Interface.Tool> internalTools;
+    public Connection conn;
 
     // Action Options
     private TextMenuItem Logout = new TextMenuItem("Logout", null);
@@ -66,7 +69,7 @@ public class App {
             );
             anInterface.createTool(user, newTool);
 
-        } catch (IOException e) {
+        } catch (IOException | SQLException e) {
             e.printStackTrace();
         }
     });
@@ -264,7 +267,7 @@ public class App {
 
         streamReader = new InputStreamReader(System.in);
         bufferedReader = new BufferedReader(streamReader);
-        anInterface = new Interface();
+        anInterface = new Interface(conn);
 
         System.out.print( "--~=={ Hello, Welcome to Terry's Tool Trade Tower }==~--\n" +
                             "Please enter your username to login\n" +
