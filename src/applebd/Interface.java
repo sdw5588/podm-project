@@ -88,10 +88,21 @@ public class Interface {
         this.conn = conn;
     }
 
+    /**
+     * Checks if a username exists in the database
+     * @param username
+     * @return - True on existance
+     */
     public Boolean verifyUsername(String username) {
         return true;
     }
 
+    /**
+     * Returns a user if their username and password are correct, else null
+     * @param username
+     * @param password
+     * @return USer signed in or null
+     */
     public User login(String username, String password) {
         if(username.equals("test") && password.equals("test")){
             return new User("test", "Johnny", "Test", "Johnny@test.best",
@@ -101,7 +112,12 @@ public class Interface {
         return null;
     }
 
-    public Tool getUserTool(User user, String barcode) {
+    /**
+     * Gets a tool from the database
+     * @param barcode - tool to get
+     * @return Pair. Tool = the tool, User = tool owner
+     */
+    public Pair<Tool, User> getTool(String barcode) {
         if(barcode.equals("112358")){
             Vector<String> categories = new Vector<>();
             Collections.addAll(categories, "Test", "Fibonacci");
@@ -120,6 +136,13 @@ public class Interface {
         statement.executeUpdate();
     }
 
+    /**
+     * Creates a new tool
+     * @param user - user who owns the tool
+     * @param newTool - tool to create (barcode ignored)
+     * @return - True on success
+     * @throws SQLException
+     */
     public Boolean createTool(User user, Tool newTool) throws SQLException {
         executeStatement(
                 "INSERT INTO tool_info (barcode, tool_name, description, purchase_date, purchase_price, username) " +
@@ -127,6 +150,13 @@ public class Interface {
         return true;
     }
 
+    /**
+     * Edits a tool. Replaces the tools information with the "newTool"'s information
+     * @param barcode - tool to edit
+     * @param newTool - new data (barcode ignored)
+     * @return - True on success
+     * @throws SQLException
+     */
     public Boolean editTool(String barcode, Tool newTool) throws SQLException {
         executeStatement(
                 String.format("UPDATE tool_info " +
@@ -135,26 +165,56 @@ public class Interface {
         return true;
     }
 
+    /**
+     * Deletes a tool
+     * @param barcode - tool to delete
+     * @return - True on success
+     * @throws SQLException
+     */
     public Boolean deleteTool(String barcode) throws SQLException {
         executeStatement(String.format("DELETE FROM tool_info WHERE barcode='%s';", barcode));
         return true;
     }
 
+    /**
+     * Adds a category to a tool for better sorting
+     * @param barcode - tool to edit
+     * @param category - category to add
+     * @return - True on success
+     * @throws SQLException
+     */
     public Boolean addToolToCategory(String barcode, String category) throws SQLException {
         executeStatement(String.format("INSERT INTO tool_category (category_name, barcode) " +
                 "VALUES (%s,%s);", category, barcode ));
         return false;
     }
 
-    public Boolean removeCategoryFromTool(String barcode, String category) throws SQLException {
+    /**
+     * Removes a tool from a category
+     * @param barcode - barcode of tool to modify
+     * @param category - category to remove
+     * @return - True on success
+     * @throws SQLException
+     */
+    public Boolean removeToolFromCategory(String barcode, String category) throws SQLException {
         executeStatement(String.format("DELETE FROM tool_category WHERE barcode='%s' AND category_name='%s'", barcode, category));
         return true;
     }
 
-    public Boolean createCategory(User user, String category) {
+    /**
+     * Creates a cateory and adds it to the databse
+     * @param category - Category to add
+     * @return - True on success
+     */
+    public Boolean createCategory(String category) {
         return false;
     }
 
+    /**
+     * This function checks if a category exists
+     * @param category - Name os the category to check
+     * @return - Trus if it exists in the database, false oterwise
+     */
     public Boolean validateCategory(String category) {
         return true;
     }
