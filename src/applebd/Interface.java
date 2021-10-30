@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Vector;
 
@@ -15,14 +16,23 @@ public class Interface {
         public int month;
         public int day;
         public int year;
+        public String date_str;
 
         Date(int month, int day, int year){
             this.month = month; this.day = day; this.year = year;
         }
 
+        Date(String date) {
+            this.date_str = date;
+        }
+
         @Override
         public String toString() {
-            return (year + "-" + month + "-" + day);
+            if (date_str != null) {
+                return this.date_str;
+            } else {
+                return (year + "-" + month + "-" + day);
+            }
         }
     }
 
@@ -104,6 +114,7 @@ public class Interface {
      * @param password
      * @return USer signed in or null
      */
+    /*
     public User login(String username, String password) {
         if(username.equals("test") && password.equals("test")){
             return new User("test", "Johnny", "Test", "Johnny@test.best",
@@ -112,6 +123,7 @@ public class Interface {
         }
         return null;
     }
+     */
 
     /**
      * Gets a tool from the database
@@ -149,7 +161,7 @@ public class Interface {
     public Boolean createTool(User user, Tool newTool) throws SQLException {
         executeStatement(
                 "INSERT INTO tool_info (tool_name, description, purchase_date, purchase_price, username) " +
-                        String.format("VALUES (%s,%s,%s,%s,%s,%s);", newTool.name, newTool.description, newTool.purDate, newTool.purPrice, user.username));
+                        String.format("VALUES ('%s','%s','%s','%s','%s','%s');", newTool.name, newTool.description, newTool.purDate, newTool.purPrice, user.username));
         return true;
     }
 
@@ -188,7 +200,7 @@ public class Interface {
      */
     public Boolean addToolToCategory(String barcode, String category) throws SQLException {
         executeStatement(String.format("INSERT INTO tool_category (category_name, barcode) " +
-                "VALUES (%s,%s);", category, barcode ));
+                "VALUES ('%s','%s');", category, barcode ));
         return true;
     }
 
@@ -211,7 +223,7 @@ public class Interface {
      */
     public Boolean createCategory(String category) throws SQLException {
         executeStatement(String.format(
-                "INSERT INTO category (category_name) VALUES (%s);", category));
+                "INSERT INTO category (category_name) VALUES ('%s');", category));
         return true;
     }
 
@@ -229,6 +241,89 @@ public class Interface {
         } else {
             return false;
         }
+    }
+
+    /**
+     * Gets the current date
+     * @return Date storing current date
+     */
+    public Date getCurrentDate() {
+        java.util.Date date = new java.util.Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("MM");
+        String month = sdf.format(date);
+
+        sdf = new SimpleDateFormat("dd");
+        String day = sdf.format(date);
+
+        sdf = new SimpleDateFormat("yyyy");
+        String year = sdf.format(date);
+
+        Date today = new Date(year + "-" + month + "-" + "day");
+        return today;
+    }
+
+    /**
+     * Adds new user to database
+     * assumes username does not already exist
+     * @return true on success
+     */
+    public boolean createAccount(String username, String password, String first_name, String last_name, String email) throws SQLException {
+        Date today = getCurrentDate();
+        executeStatement(
+                String.format("INSERT INTO \"user\" " +
+                        "(username, password, first_name, last_name, email, creation_date, last_access_date) " +
+                        "VALUES ('%s','%s','%s','%s','%s','%s','%s');",
+                        username, password, first_name, last_name, email, today, today)
+        );
+        return true;
+    }
+
+    /**
+     * Checks if username exists in database
+     * @param username username to be checked
+     * @return true if username exists, false otherwise
+     */
+    public boolean checkUsername(String username) throws SQLException {
+        PreparedStatement statement = conn.prepareStatement(String.format("SELECT COUNT(1) FROM \"user\" WHERE username = '%s';", username));
+        ResultSet result = statement.executeQuery();
+        result.next();
+        if (result.getInt(1) == 1) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Verifies username and password and updates access date
+     * @param username username entered by user
+     * @param password password entered by user
+     * @return true if login succeeds, false otherwise
+     */
+    public boolean login(String username, String password) throws SQLException {
+        // check if username exists
+        if (!checkUsername(username)) {
+            return false;
+        }
+
+        // find correct password based on username
+        PreparedStatement statement = conn.prepareStatement(String.format("SELECT password FROM \"user\" WHERE username = '%s';", "generic_name"));
+        ResultSet result = statement.executeQuery();
+        result.next();
+        String correct_password = result.getString("password");
+
+        // check if correct password matches entered password
+        if (!password.equals(correct_password)) {
+            return false;
+        }
+
+        // update access date
+        Date today = getCurrentDate();
+        executeStatement(
+                String.format("UPDATE \"user\" " +
+                        "SET last_access_date='%s' " +
+                        "WHERE username='%s';", today, username));
+        return true;
     }
 
     public Vector<Tool> getUserTools(User user) {
