@@ -326,6 +326,50 @@ public class Interface {
         return true;
     }
 
+    public boolean searchTools() {
+        return false;
+    }
+
+    public boolean sortTools() {
+        return false;
+    }
+
+    public boolean isToolAvailable() {
+        return false;
+    }
+
+    public boolean createBorrowRequest() {
+        return false;
+    }
+
+    public boolean getPendingUserRequests() {
+        return false;
+    }
+
+    public boolean acceptRequest() {
+        return false;
+    }
+
+    public boolean denyRequest() {
+        return false;
+    }
+
+    public boolean getAvailableTools() {
+        return false;
+    }
+
+    public boolean getUserBorrowedTools() {
+        return false;
+    }
+
+    public boolean getUserLentTools() {
+        return false;
+    }
+
+    public boolean returnTool() {
+        return false;
+    }
+
     public Vector<Tool> getUserTools(User user) {
         Vector<Tool> tools = new Vector<>();
         Vector<String> testCategories1 = new Vector<>();
