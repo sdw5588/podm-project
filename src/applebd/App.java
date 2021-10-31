@@ -131,7 +131,7 @@ public class App {
                                 System.out.print("==========\nCategory to remove: ");
                                 String category = bufferedReader.readLine().trim();
                                 if(tool.categories.contains(category)) {
-                                    anInterface.removeCategoryFromTool(barcode, category);
+                                    anInterface.removeToolFromCategory(barcode, category);
                                     complete = true;
                                 }
                                 else{
@@ -148,7 +148,7 @@ public class App {
                 System.out.println("Unknown barcode");
             }
 
-        } catch (IOException e) {
+        } catch (IOException | SQLException e) {
             e.printStackTrace();
         }
     });
@@ -293,7 +293,7 @@ public class App {
                     System.out.println("ERROR: Invalid Username");
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException | SQLException e) {
             e.printStackTrace();
         }
 

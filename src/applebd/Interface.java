@@ -79,6 +79,16 @@ public class Interface {
             this.shareable = shareable;
         }
 
+        public Tool(String name, String description, String barcode, Date purDate, float purPrice) {
+            this.name = name;
+            this.description = description;
+            this.barcode = barcode;
+            this.categories = null;
+            this.purDate = purDate;
+            this.purPrice = purPrice;
+            this.shareable = false;
+        }
+
         @Override
         public String toString() {
             return  name + '\t' +
@@ -175,7 +185,7 @@ public class Interface {
     public Boolean editTool(String barcode, Tool newTool) throws SQLException {
         executeStatement(
                 String.format("UPDATE tool_info " +
-                "SET tool_name=%s, description=%s, purchase_date=%s, purchase_price=%s" +
+                "SET tool_name='%s', description='%s', purchase_date='%s', purchase_price=%s " +
                 "WHERE barcode='%s';", newTool.name, newTool.description, newTool.purDate, newTool.purPrice, barcode));
         return true;
     }
@@ -258,7 +268,7 @@ public class Interface {
         sdf = new SimpleDateFormat("yyyy");
         String year = sdf.format(date);
 
-        Date today = new Date(year + "-" + month + "-" + "day");
+        Date today = new Date(year + "-" + month + "-" + day);
         return today;
     }
 
@@ -294,27 +304,75 @@ public class Interface {
         }
     }
 
+    private boolean checkUserBarcode(String barcode, String username) throws SQLException {
+        PreparedStatement statement = conn.prepareStatement(
+                String.format("SELECT COUNT(1) FROM tool_info WHERE barcode='%s' AND username='%s';", barcode, username));
+        ResultSet result = statement.executeQuery();
+        result.next();
+        if (result.getInt(1) == 1) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public Tool getUserTool(User user, String barcode) throws SQLException {
+        if (!checkUserBarcode(barcode, user.username)) {
+            return null;
+        }
+        PreparedStatement statement = conn.prepareStatement(
+                String.format("SELECT tool_name,description,purchase_date,purchase_price " +
+                        "FROM tool_info WHERE barcode = '%s';", barcode));
+        ResultSet result = statement.executeQuery();
+        result.next();
+
+        String tool_name = result.getString("tool_name");
+        String description = result.getString("description");
+        Date purchase_date = new Date(result.getString("purchase_date"));
+        float purchase_price = result.getFloat("purchase_price");
+
+        Tool tool = new Tool(tool_name,description,barcode,purchase_date,purchase_price);
+        return tool;
+    }
+
+    private User getUser(String username) throws SQLException {
+        PreparedStatement statement = conn.prepareStatement(
+                String.format("SELECT first_name,last_name,email,creation_date,last_access_date " +
+                        "FROM \"user\" WHERE username = '%s';", username));
+        ResultSet result = statement.executeQuery();
+        result.next();
+
+        String first_name = result.getString("first_name");
+        String last_name = result.getString("last_name");
+        String email = result.getString("email");
+        Date creation_date = new Date(result.getString("creation_date"));
+        Date last_access_date = new Date(result.getString("last_access_date"));
+
+        User user = new User(username,first_name,last_name,email,creation_date,last_access_date);
+        return user;
+    }
+
     /**
      * Verifies username and password and updates access date
      * @param username username entered by user
      * @param password password entered by user
      * @return true if login succeeds, false otherwise
      */
-    public boolean login(String username, String password) throws SQLException {
+    public User login(String username, String password) throws SQLException {
         // check if username exists
         if (!checkUsername(username)) {
-            return false;
+            return null;
         }
 
         // find correct password based on username
-        PreparedStatement statement = conn.prepareStatement(String.format("SELECT password FROM \"user\" WHERE username = '%s';", "generic_name"));
+        PreparedStatement statement = conn.prepareStatement(String.format("SELECT password FROM \"user\" WHERE username = '%s';", username));
         ResultSet result = statement.executeQuery();
         result.next();
         String correct_password = result.getString("password");
 
         // check if correct password matches entered password
         if (!password.equals(correct_password)) {
-            return false;
+            return null;
         }
 
         // update access date
@@ -323,7 +381,10 @@ public class Interface {
                 String.format("UPDATE \"user\" " +
                         "SET last_access_date='%s' " +
                         "WHERE username='%s';", today, username));
-        return true;
+
+        // creates user and returns it
+        User user = getUser(username);
+        return user;
     }
 
     public boolean searchTools() {
