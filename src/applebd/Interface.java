@@ -1,15 +1,17 @@
 package applebd;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.Session;
+
+import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Properties;
 import java.util.Vector;
 
 public class Interface {
     private Connection conn;
+    private Session session;
 
     public class Date {
         // YYYY-MM-DD
@@ -104,9 +106,68 @@ public class Interface {
         CATEGORY,   // used in search + sort
     }
 
-    public Interface(Connection conn) {
-        // connect to database
-        this.conn = conn;
+    public Interface(String db_username, String db_password) {
+        // Setting connection paramaters
+        int lport = 5432;
+        String rhost = "starbug.cs.rit.edu";
+        int rport = 5432;
+        String user = db_username;
+        String password = db_password;
+        String databaseName = "p320_02";
+
+        // Creating objects
+        String driverName = "org.postgresql.Driver";
+        try {
+            java.util.Properties config = new java.util.Properties();
+            config.put("StrictHostKeyChecking", "no");
+            JSch jsch = new JSch();
+            session = jsch.getSession(user, rhost, 22);
+            session.setPassword(password);
+            session.setConfig(config);
+            session.setConfig("PreferredAuthentications", "publickey,keyboard-interactive,password");
+            session.connect();
+            System.out.println("Connected");
+            int assigned_port = session.setPortForwardingL(lport, "localhost", rport);
+            System.out.println("Port Forwarded");
+
+            // Assigned port could be different from 5432 but rarely happens
+            String url = "jdbc:postgresql://localhost:" + assigned_port + "/" + databaseName;
+
+            System.out.println("database Url: " + url);
+            Properties props = new Properties();
+            props.put("user", user);
+            props.put("password", password);
+
+            int attempts = 0;
+            while(attempts < 5) {
+                try {
+                    Class.forName(driverName);
+                    conn = DriverManager.getConnection(url, props);
+                    System.out.println("Database connection established");
+                    break;
+                } catch (Exception e) {
+                    System.out.println("Database connection failed, trying again. (" + attempts + "/5)");
+                    attempts++;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void Disconnect() {
+        try {
+            if (conn != null && !conn.isClosed()) {
+                System.out.println("Closing Database Connection");
+                conn.close();
+            }
+            if (session != null && session.isConnected()) {
+                System.out.println("Closing SSH Connection");
+                session.disconnect();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -163,9 +224,9 @@ public class Interface {
         // TODO: generate barcode from SQL
         String barcode = "0";
         executeStatement(
-                "INSERT INTO tool_info (barcode, tool_name, description, purchase_date, purchase_price, username) " +
-                        String.format("VALUES (%s,'%s','%s','%s',%s,'%s');",
-                                barcode, newTool.name, newTool.description, newTool.purDate, newTool.purPrice, user.username));
+                "INSERT INTO tool_info (tool_name, description, purchase_date, purchase_price, username) " +
+                        String.format("VALUES ('%s','%s','%s',%s,'%s');",
+                                newTool.name, newTool.description, newTool.purDate, newTool.purPrice, user.username));
         return true;
     }
 
@@ -298,6 +359,13 @@ public class Interface {
         }
     }
 
+    /**
+     * checks that a tool belongs to a specific user
+     * @param barcode - tool to check
+     * @param username - name of user
+     * @return true if the tool belongs to the user
+     * @throws SQLException
+     */
     private boolean checkUserBarcode(String barcode, String username) throws SQLException {
         PreparedStatement statement = conn.prepareStatement(
                 String.format("SELECT COUNT(1) FROM tool_info WHERE barcode='%s' AND username='%s';", barcode, username));
@@ -310,6 +378,13 @@ public class Interface {
         }
     }
 
+    /**
+     * Retrieves the Tool information only if the tool belongs to the specified user
+     * @param user - user to get the tool from
+     * @param barcode - barcode of the tool to get
+     * @return - Tool or null
+     * @throws SQLException
+     */
     public Tool getUserTool(User user, String barcode) throws SQLException {
         if (!checkUserBarcode(barcode, user.username)) {
             return null;
@@ -329,6 +404,12 @@ public class Interface {
         return tool;
     }
 
+    /**
+     * Retrieves user information from the database
+     * @param username - username of the user you are retrieving
+     * @return - User information
+     * @throws SQLException
+     */
     private User getUser(String username) throws SQLException {
         PreparedStatement statement = conn.prepareStatement(
                 String.format("SELECT first_name,last_name,email,creation_date,last_access_date " +
@@ -377,17 +458,9 @@ public class Interface {
                         "WHERE username='%s';", today, username));
 
         // creates user and returns it
-        User user = getUser(username);
-        return user;
+        return getUser(username);
     }
 
-    public boolean searchTools() {
-        return false;
-    }
-
-    public boolean sortTools() {
-        return false;
-    }
 
     public boolean isToolAvailable() {
         return false;
@@ -425,6 +498,11 @@ public class Interface {
         return false;
     }
 
+    /**
+     * TODO: Generates a list of tools that belong to a specified user
+     * @param user - user to retrieve imformatio nabout
+     * @return Vector of tools
+     */
     public Vector<Tool> getUserTools(User user) {
         Vector<Tool> tools = new Vector<>();
         Vector<String> testCategories1 = new Vector<>();
@@ -442,6 +520,10 @@ public class Interface {
         return tools;
     }
 
+    /**
+     * TODO: Gets the list of all categories
+     * @return - list of all categories
+     */
     public Vector<String> getCategories() {
         Vector<String> categories = new Vector<>();
         categories.add("Shovels");
@@ -450,6 +532,12 @@ public class Interface {
         return categories;
     }
 
+    /**
+     * TODO: Searches all tools based on given parameters
+     * @param searchParam - Part of the tool we are searching
+     * @param searchArgument - String we are searching
+     * @return - Vector of tools
+     */
     public Vector<Tool> searchTools(ToolParts searchParam, String searchArgument) {
         Vector<Tool> tools = new Vector<>();
         tools.add(new Tool("SearchTool1", "", null,
@@ -462,6 +550,12 @@ public class Interface {
         return tools;
     }
 
+    /**
+     * TODO: Sorts all tools based on part
+     * @param searchParam - Part of the tool to sort by
+     * @param ascending - ascending or decending
+     * @return - Sorted Vector of tools
+     */
     public Vector<Tool> sortTools (ToolParts searchParam, Boolean ascending) {
         Vector<Tool> tools = new Vector<>();
         tools.add(new Tool("SortTool1", "", null,
