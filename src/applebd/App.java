@@ -279,7 +279,7 @@ public class App {
                 System.out.println("Create Account");
             }
             else {
-                if(anInterface.verifyUsername(input)) { // make sure username is valid
+                if(anInterface.checkUsername(input)) { // make sure username is valid
                     while(this.user == null){ // keep asking for passwords
                         System.out.print("Please enter your password: ");
                         String password = bufferedReader.readLine();

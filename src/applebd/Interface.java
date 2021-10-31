@@ -110,15 +110,6 @@ public class Interface {
     }
 
     /**
-     * Checks if a username exists in the database
-     * @param username
-     * @return - True on existance
-     */
-    public Boolean verifyUsername(String username) {
-        return true;
-    }
-
-    /**
      * Returns a user if their username and password are correct, else null
      * @param username
      * @param password
@@ -169,9 +160,12 @@ public class Interface {
      * @throws SQLException
      */
     public Boolean createTool(User user, Tool newTool) throws SQLException {
+        // TODO: generate barcode from SQL
+        String barcode = "0";
         executeStatement(
-                "INSERT INTO tool_info (tool_name, description, purchase_date, purchase_price, username) " +
-                        String.format("VALUES ('%s','%s','%s','%s','%s','%s');", newTool.name, newTool.description, newTool.purDate, newTool.purPrice, user.username));
+                "INSERT INTO tool_info (barcode, tool_name, description, purchase_date, purchase_price, username) " +
+                        String.format("VALUES (%s,'%s','%s','%s',%s,'%s');",
+                                barcode, newTool.name, newTool.description, newTool.purDate, newTool.purPrice, user.username));
         return true;
     }
 
