@@ -100,6 +100,32 @@ public class Interface {
         }
     }
 
+    public enum REQUEST_STATUS {
+        PENDING,
+        ACCEPTED,
+        DENIED
+    }
+
+    public class Request {
+        public final String request_id;
+        public final String requester;
+        public final String tool_barcode;
+        public final String tool_owner;
+        public final Date req_date;
+        public final int duration;
+        public final REQUEST_STATUS status;
+
+        public Request(String request_id, String requester, String tool_barcode, String tool_owner, Date req_date, int duration, REQUEST_STATUS status) {
+            this.request_id = request_id;
+            this.requester = requester;
+            this.tool_barcode = tool_barcode;
+            this.tool_owner = tool_owner;
+            this.req_date = req_date;
+            this.duration = duration;
+            this.status = status;
+        }
+    }
+
     public enum ToolParts {
         BARCODE,    // used in search
         NAME,       // used in search + sort
@@ -170,58 +196,19 @@ public class Interface {
         }
     }
 
-    /**
-     * Returns a user if their username and password are correct, else null
-     * @param username
-     * @param password
-     * @return USer signed in or null
-     */
-    /*
-    public User login(String username, String password) {
-        if(username.equals("test") && password.equals("test")){
-            return new User("test", "Johnny", "Test", "Johnny@test.best",
-                    new Date(12, 2, 2000), new Date(1, 1, 1999)
-            );
-        }
-        return null;
-    }
-     */
-
-    /**
-     * Gets a tool from the database
-     * @param barcode - tool to get
-     * @return Pair. Tool = the tool, User = tool owner
-     */
-    /*
-    public Pair<Tool, User> getTool(String barcode) {
-        if(barcode.equals("112358")){
-            Vector<String> categories = new Vector<>();
-            Collections.addAll(categories, "Test", "Fibonacci");
-            return new Tool (
-                    "test tool special", "this is the fibonacci test tool",
-                    barcode, categories,
-                    new Date(12, 2, 2000), 99.99f,
-                    true
-            );
-        }
-        return null;
-    }
-     */
-
     private void executeStatement(String string) throws SQLException {
         PreparedStatement statement = conn.prepareStatement(string);
         statement.executeUpdate();
     }
 
     /**
-     * Creates a new tool
+     * Creates a new tool TODO: and inserts it into categories
      * @param user - user who owns the tool
      * @param newTool - tool to create (barcode ignored)
      * @return - True on success
      * @throws SQLException
      */
     public Boolean createTool(User user, Tool newTool) throws SQLException {
-        // TODO: generate barcode from SQL
         String barcode = "0";
         executeStatement(
                 "INSERT INTO tool_info (tool_name, description, purchase_date, purchase_price, username) " +
@@ -231,7 +218,7 @@ public class Interface {
     }
 
     /**
-     * Edits a tool. Replaces the tools information with the "newTool"'s information
+     * Edits a tool. Replaces the tools information with the "newTool"'s information (ignoring barcode)
      * @param barcode - tool to edit
      * @param newTool - new data (barcode ignored)
      * @return - True on success
@@ -246,7 +233,7 @@ public class Interface {
     }
 
     /**
-     * Deletes a tool
+     * Deletes a tool TODO: only if it is not a part of a request, also deletes all category entries
      * @param barcode - tool to delete
      * @return - True on success
      * @throws SQLException
@@ -461,40 +448,93 @@ public class Interface {
         return getUser(username);
     }
 
-
-    public boolean isToolAvailable() {
+    /**
+     * TODO: Checks if a tool is available to borrow
+     * @param barcode - tool to check
+     * @return true or false
+     */
+    public boolean isToolAvailable(String barcode) {
         return false;
     }
 
-    public boolean createBorrowRequest() {
+    /**
+     * TODO: Creates a borrow request
+     * @param user - user requesting to borrow
+     * @param barcode - tool to borrow
+     * @param requiredDate - date the tool is needed
+     * @param daysNeeded - how many days the tool is needed
+     * @return True if successful
+     */
+    public boolean createBorrowRequest(User user, String barcode, Date requiredDate, int daysNeeded) {
         return false;
     }
 
-    public boolean getPendingUserRequests() {
+    /**
+     * TODO: Fetches a list of requests a user has yet to respond to
+     *      meaning tool_owner = user and status = pending
+     * @param user - user to check
+     * @return - Vector of Requests
+     */
+    public Vector<Request> getPendingUserRequests(User user) {
+        return null;
+    }
+
+    /**
+     * TODO: Accepts a pending request only if the proper user is attempting to
+     *      example request.tool_owner = user
+     * @param user - User attempting to accept request
+     * @param request_id - request to accept
+     * @return - True if successful
+     */
+    public boolean acceptRequest(User user, String request_id) {
         return false;
     }
 
-    public boolean acceptRequest() {
+    /**
+     * TODO: Denies a pending request only if the proper user is attempting to
+     *      example request.tool_owner = user
+     * @param user - User attempting to accept request
+     * @param request_id - request to deny
+     * @return - True on success
+     */
+    public boolean denyRequest(User user, String request_id) {
         return false;
     }
 
-    public boolean denyRequest() {
-        return false;
+    /**
+     * TODO: Gets a list of tools available to borrow
+     *      it is shareable and not in a borrow request
+     * @return - Vector of tools
+     */
+    public Vector<Tool> getAvailableTools() {
+        return null;
     }
 
-    public boolean getAvailableTools() {
-        return false;
+    /**
+     * TODO: Gets a list of all the tools a user is borrowing
+     * @param user - user to check
+     * @return Vector of tools
+     */
+    public Vector<Tool> getUserBorrowedTools(User user) {
+        return null;
     }
 
-    public boolean getUserBorrowedTools() {
-        return false;
+    /**
+     * TODO: Gets a list of all the tools a user is lending out
+     * @param user - user to check
+     * @return Vector of tools
+     */
+    public Vector<Tool> getUserLentTools(User user) {
+        return null;
     }
 
-    public boolean getUserLentTools() {
-        return false;
-    }
-
-    public boolean returnTool() {
+    /**
+     * TODO: Returns a tool to it's owner (deletes the request entry)
+     * @param user - User attempting to return
+     * @param barcode - Barcode of the tool
+     * @return - True if successful
+     */
+    public boolean returnTool(User user, String barcode) {
         return false;
     }
 
