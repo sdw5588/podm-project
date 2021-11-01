@@ -224,7 +224,7 @@ public class Interface {
      * @return - True on success
      * @throws SQLException
      */
-    public Boolean editTool(String barcode, Tool newTool) throws SQLException {
+    public boolean editTool(String barcode, Tool newTool) throws SQLException {
         executeStatement(
                 String.format("UPDATE tool_info " +
                 "SET tool_name='%s', description='%s', purchase_date='%s', purchase_price=%s " +
@@ -238,7 +238,7 @@ public class Interface {
      * @return - True on success
      * @throws SQLException
      */
-    public Boolean deleteTool(String barcode) throws SQLException {
+    public boolean deleteTool(String barcode) throws SQLException {
         executeStatement(String.format("DELETE FROM tool_info WHERE barcode='%s';", barcode));
         return true;
     }
@@ -284,7 +284,7 @@ public class Interface {
      * @param category - Name os the category to check
      * @return - Trus if it exists in the database, false oterwise
      */
-    public Boolean validateCategory(String category) throws SQLException {
+    public boolean validateCategory(String category) throws SQLException {
         PreparedStatement statement = conn.prepareStatement(String.format("SELECT COUNT(1) FROM category WHERE category_name = '%s';", category));
         ResultSet result = statement.executeQuery();
         result.next();
