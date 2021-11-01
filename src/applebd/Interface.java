@@ -565,11 +565,41 @@ public class Interface {
      * @return - list of all categories
      */
     public Vector<String> getCategories() {
-        Vector<String> categories = new Vector<>();
-        categories.add("Shovels");
-        categories.add("Hammers");
+        try {
+            PreparedStatement statement = conn.prepareStatement(
+                "SELECT tool_category FROM category\n ORDER BY tool_category"
+            );
+            ResultSet result = statement.executeQuery();
+            Vector<String> categories = new Vector<>();
+            result.next();
+            while(!result.isAfterLast()){
+                categories.add(result.getString("tool_category"));
+                result.next();
+            }
+            return categories;
+        }
+        catch(SQLException e){
+            return new Vector<>();
+        }
+    }
 
-        return categories;
+    /**
+     * TODO: checks if a category already exists
+     * @param category - category to check
+     * @return - status of the category
+     */
+    public boolean checkCategory(String category){
+        try{
+            PreparedStatement statement = conn.prepareStatement(
+            "select count(*) from category where tool_category = '" + category +"'"
+            );
+            ResultSet result = statement.executeQuery();
+            result.next();
+            return result.getInt("count") > 0;
+        }
+        catch(SQLException e){
+            return false;
+        }
     }
 
     /**
