@@ -476,23 +476,27 @@ public class Interface {
      * Retrieves user information from the database
      * @param username - username of the user you are retrieving
      * @return - User information
-     * @throws SQLException
      */
-    private User getUser(String username) throws SQLException {
-        PreparedStatement statement = conn.prepareStatement(
-                String.format("SELECT first_name,last_name,email,creation_date,last_access_date " +
-                        "FROM \"user\" WHERE username = '%s';", username));
-        ResultSet result = statement.executeQuery();
-        result.next();
+    private User getUser(String username) {
+        try {
+            PreparedStatement statement = conn.prepareStatement(
+                    String.format("SELECT first_name,last_name,email,creation_date,last_access_date " +
+                            "FROM \"user\" WHERE username = '%s';", username));
+            ResultSet result = statement.executeQuery();
+            result.next();
 
-        String first_name = result.getString("first_name");
-        String last_name = result.getString("last_name");
-        String email = result.getString("email");
-        Date creation_date = new Date(result.getString("creation_date"));
-        Date last_access_date = new Date(result.getString("last_access_date"));
+            String first_name = result.getString("first_name");
+            String last_name = result.getString("last_name");
+            String email = result.getString("email");
+            Date creation_date = new Date(result.getString("creation_date"));
+            Date last_access_date = new Date(result.getString("last_access_date"));
 
-        User user = new User(username,first_name,last_name,email,creation_date,last_access_date);
-        return user;
+            User user = new User(username, first_name, last_name, email, creation_date, last_access_date);
+            return user;
+        }
+        catch(SQLException e){
+            return null;
+        }
     }
 
     /**
