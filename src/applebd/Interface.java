@@ -334,6 +334,31 @@ public class Interface {
     }
 
     /**
+     * fetches the list of categories a tool belongs to
+     * @param barcode - tool to  fetch
+     * @return Vector of categories
+     */
+    public Vector<String> getToolCategories(String barcode){
+        Vector<String> categories = new Vector<>();
+        try{
+            PreparedStatement statement = conn.prepareStatement(String.format(
+                    "SELECT category_name FROM tool_category WHERE barcode = '%s' ORDER BY category_name",
+                    barcode
+            ));
+            ResultSet result = statement.executeQuery();
+            result.next();
+            while(!result.isAfterLast()){
+                categories.add(result.getString("category_name"));
+                result.next();
+            }
+            return categories;
+        }
+        catch(SQLException e){
+            return categories;
+        }
+    }
+
+    /**
      * This function checks if a category exists
      * @param category - Name os the category to check
      * @return - Trus if it exists in the database, false oterwise
