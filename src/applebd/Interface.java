@@ -628,19 +628,26 @@ public class Interface {
      */
     public Vector<Tool> getUserTools(User user) {
         Vector<Tool> tools = new Vector<>();
-        Vector<String> testCategories1 = new Vector<>();
-        Collections.addAll(testCategories1, "Test", "Hand");
-        Vector<String> testCategories2 = new Vector<>();
-        Collections.addAll(testCategories2, "Test", "Power");
-
-        tools.add(new Tool("48-in Steel Digging Shovel", "This is a basic shovel",
-                "1123581029", testCategories1,
-                new Date(2, 28, 2015), 15.43f, true));
-        tools.add(new Tool("20-in Wood Transfer Shovel", "A fair shovel",
-                "1598468740", testCategories2,
-                new Date(5, 3, 2017), 25.99f, true));
-
-        return tools;
+        try {
+            PreparedStatement statement = conn.prepareStatement(
+                    String.format("SELECT * FROM tool_info WHERE username = '%s'",
+                            user.username
+                    ));
+            ResultSet result = statement.executeQuery();
+            result.next();
+            while(!result.isAfterLast()){
+                String barcode = result.getString("barcode");
+                Vector<String> categories = getToolCategories(barcode);
+                tools.add(new Tool(result.getString("tool_name"), result.getString("description"),
+                        barcode, categories,
+                        new Date(result.getString("purchase_date")), result.getFloat("purchase_price"),
+                        false));
+                result.next();
+            }
+            return tools;
+        } catch (SQLException e) {
+            return tools;
+        }
     }
 
     /**
