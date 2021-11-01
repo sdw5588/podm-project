@@ -702,12 +702,54 @@ public class Interface {
      */
     public Vector<Tool> searchTools(ToolParts searchParam, String searchArgument) {
         Vector<Tool> tools = new Vector<>();
-        tools.add(new Tool("SearchTool1", "", null,
-                new Date(2, 28, 2015), 15.43f, true));
-        tools.add(new Tool("SearchTool2", "", null,
-                new Date(2, 28, 2015), 15.43f, true));
-        tools.add(new Tool("SearchTool3", "", null,
-                new Date(2, 28, 2015), 15.43f, true));
+        try{
+            String searchPart = "";
+            if(searchParam == ToolParts.NAME) searchPart = "tool_name";
+            if(searchParam == ToolParts.BARCODE) searchPart = "CAST(barcode AS VARCHAR(40))";
+
+            if(!searchPart.equals("")){
+                PreparedStatement statement = conn.prepareStatement(String.format(
+                    "SELECT * FROM tool_info WHERE LOWER(%s) LIKE '%%%s%%'",
+                    searchPart, searchArgument.toLowerCase()
+                ));
+                System.out.println(statement.toString());
+                ResultSet result = statement.executeQuery();
+                result.next();
+                while(!result.isAfterLast()){
+                    String barcode = result.getString("barcode");
+                    Vector<String> categories = getToolCategories(barcode);
+                    tools.add(new Tool(result.getString("tool_name"), result.getString("description"),
+                            barcode, categories,
+                            new Date(result.getString("purchase_date")), result.getFloat("purchase_price"),
+                            false));
+                    result.next();
+                }
+                return tools;
+            }
+
+            if(searchParam == ToolParts.CATEGORY){
+                PreparedStatement statement = conn.prepareStatement(String.format(
+                        "SELECT * FROM tool_info INNER JOIN tool_category tc on tool_info.barcode = tc.barcode\n" +
+                        "WHERE LOWER(category_name) LIKE '%%%s%%'",
+                        searchArgument.toLowerCase()
+                ));
+                System.out.println(statement.toString());
+                ResultSet result = statement.executeQuery();
+                result.next();
+                while(!result.isAfterLast()){
+                    String barcode = result.getString("barcode");
+                    Vector<String> categories = getToolCategories(barcode);
+                    tools.add(new Tool(result.getString("tool_name"), result.getString("description"),
+                            barcode, categories,
+                            new Date(result.getString("purchase_date")), result.getFloat("purchase_price"),
+                            false));
+                    result.next();
+                }
+                return tools;
+            }
+
+
+        } catch (SQLException ignored){}
 
         return tools;
     }
