@@ -208,9 +208,15 @@ public class Interface {
         }
     }
 
-    private void executeStatement(String string) throws SQLException {
-        PreparedStatement statement = conn.prepareStatement(string);
-        statement.executeUpdate();
+    private boolean executeStatement(String string) {
+        try {
+            PreparedStatement statement = conn.prepareStatement(string);
+            statement.executeUpdate();
+            return true;
+        }
+        catch (SQLException e){
+            return false;
+        }
     }
 
     /**
