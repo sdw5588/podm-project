@@ -298,8 +298,8 @@ public class App {
         streamReader = new InputStreamReader(System.in);
         bufferedReader = new BufferedReader(streamReader);
 
-        String db_username = (String)prompt("Database Username: ");
-        String db_password = (String)prompt("Database Password: ");
+        String db_username = prompt("Database Username: ");
+        String db_password = prompt("Database Password: ");
 
         anInterface = new Interface(db_username, db_password);
 
@@ -310,7 +310,7 @@ public class App {
             if(anInterface.checkUsername(username)){
                 // username found, ask for password
                 while(this.user == null) {
-                    String password = (String) prompt("Please enter your password: ");
+                    String password = prompt("Please enter your password: ");
                     user = anInterface.login(username, password);
                     if(user == null){
                         System.out.println("ERROR: Invalid Password!");
@@ -319,11 +319,18 @@ public class App {
             }
             else {
                 // username not found, ask to create an account
-                String response = (String)prompt("We didn't recognise that username, would  you like to create an account? (y/n): ");
+                String response = prompt("We didn't recognise that username, would  you like to create an account? (y/n): ");
                 if(response.trim().startsWith("y")){
                     // create a new account
-                    String password = (String)prompt("What would you like your password to be? ");
-                    System.out.println("Username: " + username + ", Password: " + password);
+                    String firstName = prompt("What is your first name? ");
+                    String lastName = prompt("What is your last name? ");
+                    String email = prompt("What is your email address? ");
+                    String password;
+                    do {
+                        password = prompt("What would you like your password to be? ");
+                    } while(password.equals(""));
+                    anInterface.createAccount(username, password, firstName, lastName, email);
+                    user = anInterface.login(username, password);
                 }
                 else {
                     System.out.println("Okay, have a nice day!\n");
