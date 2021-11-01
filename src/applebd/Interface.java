@@ -98,6 +98,18 @@ public class Interface {
                     categories + "\t" +
                     shareable;
         }
+
+        public String toDetailedString() {
+            return  String.format(
+                    "%s\n" +
+                    "%s\n" +
+                    "\tBarcode: [%s]\n" +
+                    "\tCategories: " + categories + "\n" +
+                    "\t%s - $c$f\n" +
+                    "\tSharable: $s",
+                    name, description, barcode, purDate, '$', purPrice, shareable.toString()
+                    );
+        }
     }
 
     public enum REQUEST_STATUS {
