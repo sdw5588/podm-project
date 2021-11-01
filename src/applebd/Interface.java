@@ -107,7 +107,7 @@ public class Interface {
                     "\tCategories: " + categories + "\n" +
                     "\t%s - $%f\n" +
                     "\tSharable: %s",
-                    name, description, barcode, purDate, '$', purPrice, shareable.toString()
+                    name, description, barcode, purDate, purPrice, shareable.toString()
                     );
         }
     }
@@ -248,14 +248,12 @@ public class Interface {
      * @param barcode - tool to edit
      * @param newTool - new data (barcode ignored)
      * @return - True on success
-     * @throws SQLException
      */
-    public boolean editTool(String barcode, Tool newTool) throws SQLException {
-        executeStatement(
+    public boolean editTool(String barcode, Tool newTool) {
+        return executeStatement(
                 String.format("UPDATE tool_info " +
                 "SET tool_name='%s', description='%s', purchase_date='%s', purchase_price=%s " +
                 "WHERE barcode='%s';", newTool.name, newTool.description, newTool.purDate, newTool.purPrice, barcode));
-        return true;
     }
 
     /**
@@ -467,7 +465,7 @@ public class Interface {
             Date purchase_date = new Date(result.getString("purchase_date"));
             float purchase_price = result.getFloat("purchase_price");
 
-            return new Tool(tool_name, description, barcode, purchase_date, purchase_price);
+            return new Tool(tool_name, description, barcode, getToolCategories(barcode), purchase_date, purchase_price, false);
         }
         catch(SQLException e){
             return null;

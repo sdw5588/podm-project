@@ -113,16 +113,16 @@ public class App {
 
     private TextMenuItem EditTool = new TextMenuItem("Edit Tool", () -> {
         String barcode = prompt("Barcode of the tool you would like to edit: ");
-        Interface.Tool tool = anInterface.getUserTool(user, barcode);
-        if(tool != null){
-            System.out.println("Original Tool:\n" + tool.toDetailedString());
+        Interface.Tool oldTool = anInterface.getUserTool(user, barcode);
+        if(oldTool != null){
+            System.out.println("Original Tool:\n" + oldTool.toDetailedString());
 
             String name = prompt("Please enter the new name of the tool, leave blank to leave unchanged: ");
             String description = prompt("New description, blank if unchanged: ");
             Interface.Date purDate = (Interface.Date)prompt("Purchase date, blank if unchanged: ", PROMPT_TYPE.DATE);
             Float purPrice = (Float)prompt("Purchase price, blank if unchanged: ", PROMPT_TYPE.FLOAT);
 
-            Vector<String> categories = tool.categories;
+            Vector<String> categories = oldTool.categories;
             String choice = prompt("Would you like to add or remove any categories (add/remove): ").trim();
             if(choice.startsWith("add")){
                 // add categories
@@ -164,6 +164,17 @@ public class App {
             else{
                 System.out.println("Unknown option, leaving categories alone.");
             }
+
+            Interface.Tool newTool = anInterface.new Tool(
+                    name.equals("") ? oldTool.name : name,
+                    description.equals("") ? oldTool.description : description,
+                    oldTool.barcode, oldTool.categories,
+                    purDate == null ? oldTool.purDate : purDate,
+                    purPrice == null ? oldTool.purPrice : purPrice,
+                    oldTool.shareable
+            );
+            if(!anInterface.editTool(barcode, newTool))
+                System.out.println("There was an issue with your request.");
         }
         else{
             System.out.println("Sorry, we couldn't seem to find that tool.");
