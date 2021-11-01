@@ -25,8 +25,8 @@ public class App {
         FLOAT
     }
 
-    private Object prompt(String prompt){
-        return this.prompt(prompt, PROMPT_TYPE.STRING);
+    private String prompt(String prompt){
+        return (String)this.prompt(prompt, PROMPT_TYPE.STRING);
     }
 
     private Object prompt(String prompt, PROMPT_TYPE type) {
@@ -42,7 +42,9 @@ public class App {
                     month = day = year = -1;
                     while(!gotDate) {
                         System.out.print(prompt);
-                        String[] preParseDate = bufferedReader.readLine().split("/");
+                        String input = bufferedReader.readLine();
+                        if(input.equals("")) return null;
+                        String[] preParseDate = input.split("/");
                         if(preParseDate.length == 3){
                             if(preParseDate[0].trim().length() == 2 && preParseDate[1].trim().length() == 2 &&
                                     preParseDate[2].trim().length() == 4) {
@@ -70,7 +72,9 @@ public class App {
                 case FLOAT:
                     while(true) {
                         System.out.print(prompt);
-                        float num = Float.parseFloat(bufferedReader.readLine());
+                        String input = bufferedReader.readLine();
+                        if(input.equals("")) return null;
+                        float num = Float.parseFloat(input);
                         if(num > 0) {
                             return num;
                         }
@@ -87,55 +91,15 @@ public class App {
     private TextMenuItem Logout = new TextMenuItem("Logout", null);
 
     private TextMenuItem CreateTool = new TextMenuItem("Create Tool", () -> {
-        System.out.println("!!!!!Create Tool!!!!!");
-        /*
-        System.out.print("Name of new Tool: ");
-        String name = bufferedReader.readLine();
-        System.out.print("Description: ");
-        String description = bufferedReader.readLine();
-        System.out.print("Categories (separated by ','s): ");
-        String[] categoriesarr = bufferedReader.readLine().split(",");
-        for(int i = 0; i < categoriesarr.length; i++){
-            categoriesarr[i] = categoriesarr[i].trim();
-        }
-        Vector<String> categories = new Vector<>();
-        Collections.addAll(categories, categoriesarr);
-
-        int month, day, year;
-        month = day = year = -1;
-        Boolean gotDate = false;
-        while(!gotDate) {
-            System.out.print("Purchase Date (MM/DD/YYYY): ");
-            String[] preParseDate = bufferedReader.readLine().split("/");
-            if(preParseDate.length == 3){
-                if(preParseDate[0].trim().length() == 2 && preParseDate[1].trim().length() == 2 &&
-                        preParseDate[2].trim().length() == 4) {
-                    try {
-                        month = Integer.parseInt(preParseDate[0]);
-                        day = Integer.parseInt(preParseDate[1]);
-                        year = Integer.parseInt(preParseDate[2]);
-                        gotDate = true;
-                        continue;
-                    } catch (NumberFormatException ignored) {}
-                }
-            }
-            System.out.println("Invalid format, please try again.");
-        }
-        Interface.Date purDate = anInterface.new Date(month, day, year);
-        System.out.print("Purchase Price: $");
-        Float purPrice = Float.parseFloat(bufferedReader.readLine());
-        System.out.print("Would you like to share this tool? (y/n): ");
-        Boolean share = bufferedReader.readLine().startsWith("y");
-        */
-
-        String name = (String)prompt("Name of the new tool: ");
-        String description = (String)prompt("Description: ");
+        // gather all information
+        String name = prompt("Name of the new tool: ");
+        String description = prompt("Description: ");
         String[] categoriesarr = (String[])prompt("Categories (separated by ','s): ", PROMPT_TYPE.LIST);
         Vector<String> categories = new Vector<>();
         Collections.addAll(categories, categoriesarr);
         Interface.Date purDate = (Interface.Date)prompt("Purchase Date (MM/DD/YYYY): ", PROMPT_TYPE.DATE);
         Float purPrice = (Float)prompt("Purchase Price: $", PROMPT_TYPE.FLOAT);
-        String response = (String)prompt("Would you like to share this tool? (y/n):");
+        String response = prompt("Would you like to share this tool? (y/n):");
         boolean share = response.startsWith("y");
 
         Interface.Tool newTool = anInterface.new Tool(
@@ -143,89 +107,66 @@ public class App {
                 purDate, purPrice,
                 share
         );
-        try {
-            anInterface.createTool(user, newTool);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        if(!anInterface.createTool(user, newTool))
+            System.out.println("There seems to have been an error with your request, please try again.");
     });
 
-    // edit tool needs more categories and more structure
     private TextMenuItem EditTool = new TextMenuItem("Edit Tool", () -> {
-        System.out.println("!!!!!Edit Tool!!!!!");
-        try {
-            System.out.println("Barcode of the tool you would like to edit: ");
-            String barcode = bufferedReader.readLine();
-            Interface.Tool tool = anInterface.getUserTool(user, barcode);
-            Interface.Tool newTool;
-            if(tool != null){
-                System.out.println("Current Tool:\n" + tool.toString());
-                System.out.println("[name, description, categories, purchase date, purchase price, shareable]");
-                System.out.print("What would you like to edit? ");
-                String choice = bufferedReader.readLine();
-                switch(choice.trim().toLowerCase()){
-                    case "name":
-                        System.out.print("New name: ");
-                        String newName = bufferedReader.readLine().trim();
-                        newTool = anInterface.new Tool(
-                                newName, tool.description,
-                                tool.barcode, tool.categories, tool.purDate,
-                                tool.purPrice, tool.shareable
-                        );
-                        anInterface.editTool(barcode, newTool);
-                        break;
-                    case "description":
-                        System.out.print("New description: ");
-                        String newDescription = bufferedReader.readLine().trim();
-                        newTool = anInterface.new Tool(
-                                tool.name, newDescription,
-                                tool.barcode, tool.categories, tool.purDate,
-                                tool.purPrice, tool.shareable
-                        );
-                        anInterface.editTool(barcode, newTool);
-                        break;
-                    case "categories":
-                        Boolean complete = false;
-                        while(!complete) {
-                            System.out.print("Add or Remove? ");
-                            String option = bufferedReader.readLine();
-                            if (option.trim().toLowerCase().equals("add")) {
-                                System.out.print("Category to add: ");
-                                String category = bufferedReader.readLine().trim();
-                                if(anInterface.validateCategory(category)) {
-                                    anInterface.addToolToCategory(barcode, category);
-                                    complete = true;
-                                }
-                                else{
-                                    System.out.println("Invalid Category");
-                                }
-                            } else if (option.trim().toLowerCase().equals("remove")) {
-                                System.out.println("Current Categories:");
-                                for(String category: tool.categories){
-                                    System.out.println(category);
-                                }
-                                System.out.print("==========\nCategory to remove: ");
-                                String category = bufferedReader.readLine().trim();
-                                if(tool.categories.contains(category)) {
-                                    anInterface.removeToolFromCategory(barcode, category);
-                                    complete = true;
-                                }
-                                else{
-                                    System.out.println("Invalid Category");
-                                }
-                            } else {
-                                System.out.println("Unknown Option.");
+        String barcode = prompt("Barcode of the tool you would like to edit: ");
+        Interface.Tool tool = anInterface.getUserTool(user, barcode);
+        if(tool != null){
+            System.out.println("Original Tool:\n" + tool.toDetailedString());
+
+            String name = prompt("Please enter the new name of the tool, leave blank to leave unchanged: ");
+            String description = prompt("New description, blank if unchanged: ");
+            Interface.Date purDate = (Interface.Date)prompt("Purchase date, blank if unchanged: ", PROMPT_TYPE.DATE);
+            Float purPrice = (Float)prompt("Purchase price, blank if unchanged: ", PROMPT_TYPE.FLOAT);
+
+            Vector<String> categories = tool.categories;
+            String choice = prompt("Would you like to add or remove any categories (add/remove): ").trim();
+            if(choice.startsWith("add")){
+                // add categories
+                System.out.println("To see all categories, please type '-all'");
+                boolean gotCategories = false;
+                while(!gotCategories) {
+                    String input = prompt("Categories to add (separated by a ','): ");
+                    if(input.trim().equals("-all")){
+                        Vector<String> allCategories = anInterface.getCategories();
+                        for(String cat : allCategories){
+                            System.out.println("\t" + cat);
+                        }
+                    }
+                    else{
+                        String[] categoriesarr = input.trim().split(",");
+                        for (String cat : categoriesarr) {
+                            if(!anInterface.addToolToCategory(barcode, cat.trim())){
+                                System.out.println("Unable to add '" + cat + "'");
                             }
                         }
-                        break;
+                        gotCategories = true;
+                    }
+                }
+            }
+            else if(choice.startsWith("rem")){
+                // remove categories
+                boolean gotCategories = false;
+                while(!gotCategories){
+                    String[] input = (String[])prompt("Categories to remove (separated by a ','): ", PROMPT_TYPE.LIST);
+                    for (String cat : input) {
+                        cat = cat.trim();
+                        if(!anInterface.removeToolFromCategory(barcode, cat)){
+                            System.out.println("Unable to remove '" + cat + "'");
+                        }
+                    }
+                    gotCategories = true;
                 }
             }
             else{
-                System.out.println("Unknown barcode");
+                System.out.println("Unknown option, leaving categories alone.");
             }
-
-        } catch (IOException | SQLException e) {
-            e.printStackTrace();
+        }
+        else{
+            System.out.println("Sorry, we couldn't seem to find that tool.");
         }
     });
 
@@ -234,14 +175,19 @@ public class App {
     });
 
     private TextMenuItem CreateCategory = new TextMenuItem("Create Category", () -> {
-        System.out.println("!!!!!Create Category!!!!!");
+        String newCategory = prompt("Name of the new category: ");
+        if(!anInterface.createCategory(newCategory)){
+            System.out.println("There was an issue with your request.");
+        }
     });
 
     private TextMenuItem CreateRequest = new TextMenuItem("Create Request", () -> {
+        //TODO
         System.out.println("!!!!!Create Request!!!!!");
     });
 
     private TextMenuItem SearchTools = new TextMenuItem("Search Tools", () -> {
+        //TODO
         System.out.println("!!!!!Search Tools!!!!!");
         internalTools = anInterface.searchTools(Interface.ToolParts.NAME, "SearchTool");
         this.AllToolsSearch.run();
@@ -249,11 +195,13 @@ public class App {
 
     private TextMenuItem SortTools = new TextMenuItem("Sort Tools", () -> {
         System.out.println("!!!!!Sort Tools!!!!!");
+        //TODO
         internalTools = anInterface.sortTools(Interface.ToolParts.NAME, true);
         this.AllToolsSort.run();
     });
 
     private TextMenuItem ReturnTool = new TextMenuItem("Return Tool", () -> {
+        //TODO
         System.out.println("!!!!!Return Tool!!!!!");
     });
 
@@ -271,7 +219,6 @@ public class App {
             CreateRequest
     );
 
-
     private Runnable printSortHead = () -> {
         System.out.println("\n--~=={ Sorted Results }==~--");
         for (Interface.Tool tool : internalTools) {
@@ -284,16 +231,15 @@ public class App {
             CreateRequest
     );
 
-
     private TextMenu AllTools = new TextMenu(
             "All Tools", "\n--~=={ All Tools }==~--",
             CreateRequest
     );
+
     private TextMenu Requests = new TextMenu(
             "Requests", "\n--~=={ My Requests }==~--",
             SearchTools, SortTools, AllTools, ReturnTool
     );
-
 
     private Runnable printCategoryHead = () -> {
         System.out.println("\n--~=={ My Categories }==~--");
@@ -307,7 +253,6 @@ public class App {
             "My Categories", this.printCategoryHead,
             CreateCategory
     );
-
 
     private Runnable printToolHead = () -> {
         System.out.println("\n--~=={ My Tools }==~--");
