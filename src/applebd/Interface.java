@@ -220,19 +220,27 @@ public class Interface {
     }
 
     /**
-     * Creates a new tool TODO: and inserts it into categories
+     * Creates a new tool and inserts it into categories
      * @param user - user who owns the tool
      * @param newTool - tool to create (barcode ignored)
      * @return - True on success
      * @throws SQLException
      */
-    public Boolean createTool(User user, Tool newTool) throws SQLException {
+    public boolean createTool(User user, Tool newTool){
         String barcode = "0";
-        executeStatement(
-                "INSERT INTO tool_info (tool_name, description, purchase_date, purchase_price, username) " +
-                        String.format("VALUES ('%s','%s','%s',%s,'%s');",
-                                newTool.name, newTool.description, newTool.purDate, newTool.purPrice, user.username));
-        return true;
+        if(executeStatement(
+    "INSERT INTO tool_info (tool_name, description, purchase_date, purchase_price, username) " +
+            String.format("VALUES ('%s','%s','%s',%s,'%s');",
+            newTool.name, newTool.description, newTool.purDate, newTool.purPrice, user.username))
+        ){
+            boolean success = true;
+            for(String cat : newTool.categories){
+                if(!addToolToCategory(newTool.barcode, cat.trim()))
+                    success = false;
+            }
+            return success;
+        }
+        return false;
     }
 
     /**
@@ -262,16 +270,33 @@ public class Interface {
     }
 
     /**
+     * Creates a category and adds it to the database
+     * @param category - Category to add
+     * @return - True on success
+     */
+    public boolean createCategory(String category){
+        if(checkCategory(category))
+            return false;
+        return executeStatement(String.format(
+                "INSERT INTO category (tool_category) VALUES ('%s')",
+                category
+        ));
+    }
+
+    /**
      * Adds a category to a tool for better sorting
      * @param barcode - tool to edit
      * @param category - category to add
      * @return - True on success
      * @throws SQLException
      */
-    public Boolean addToolToCategory(String barcode, String category) throws SQLException {
-        executeStatement(String.format("INSERT INTO tool_category (category_name, barcode) " +
+    public boolean addToolToCategory(String barcode, String category) {
+        if(!checkCategory(category))
+            return false;
+        if(toolInCategory(barcode, category))
+            return false;
+        return executeStatement(String.format("INSERT INTO tool_category (category_name, barcode) " +
                 "VALUES ('%s','%s');", category, barcode ));
-        return true;
     }
 
     /**
@@ -281,20 +306,31 @@ public class Interface {
      * @return - True on success
      * @throws SQLException
      */
-    public Boolean removeToolFromCategory(String barcode, String category) throws SQLException {
-        executeStatement(String.format("DELETE FROM tool_category WHERE barcode='%s' AND category_name='%s'", barcode, category));
-        return true;
+    public boolean removeToolFromCategory(String barcode, String category) {
+        return executeStatement(String.format(
+                "DELETE FROM tool_category WHERE barcode='%s' AND category_name='%s'",
+                barcode, category
+        ));
     }
 
     /**
-     * Creates a cateory and adds it to the databse
-     * @param category - Category to add
-     * @return - True on success
+     * Checks if a tool is already in a given category
+     * @param barcode - tool to check
+     * @param category - category to check
+     * @return -= true if the tool is in the category
      */
-    public Boolean createCategory(String category) throws SQLException {
-        executeStatement(String.format(
-                "INSERT INTO category (category_name) VALUES ('%s');", category));
-        return true;
+    public boolean toolInCategory(String barcode, String category){
+        try {
+            PreparedStatement statement = conn.prepareStatement(String.format(
+                    "SELECT COUNT(*) FROM tool_category WHERE category_name = '%s' AND barcode = '%s'",
+                    category, barcode));
+            ResultSet result = statement.executeQuery();
+            result.next();
+            return result.getInt("count") > 0;
+        }
+        catch(SQLException e){
+            return false;
+        }
     }
 
     /**
@@ -390,23 +426,27 @@ public class Interface {
      * @return - Tool or null
      * @throws SQLException
      */
-    public Tool getUserTool(User user, String barcode) throws SQLException {
-        if (!checkUserBarcode(barcode, user.username)) {
+    public Tool getUserTool(User user, String barcode){
+        try {
+            if (!checkUserBarcode(barcode, user.username)) {
+                return null;
+            }
+            PreparedStatement statement = conn.prepareStatement(
+                    String.format("SELECT tool_name,description,purchase_date,purchase_price " +
+                            "FROM tool_info WHERE barcode = '%s';", barcode));
+            ResultSet result = statement.executeQuery();
+            result.next();
+
+            String tool_name = result.getString("tool_name");
+            String description = result.getString("description");
+            Date purchase_date = new Date(result.getString("purchase_date"));
+            float purchase_price = result.getFloat("purchase_price");
+
+            return new Tool(tool_name, description, barcode, purchase_date, purchase_price);
+        }
+        catch(SQLException e){
             return null;
         }
-        PreparedStatement statement = conn.prepareStatement(
-                String.format("SELECT tool_name,description,purchase_date,purchase_price " +
-                        "FROM tool_info WHERE barcode = '%s';", barcode));
-        ResultSet result = statement.executeQuery();
-        result.next();
-
-        String tool_name = result.getString("tool_name");
-        String description = result.getString("description");
-        Date purchase_date = new Date(result.getString("purchase_date"));
-        float purchase_price = result.getFloat("purchase_price");
-
-        Tool tool = new Tool(tool_name,description,barcode,purchase_date,purchase_price);
-        return tool;
     }
 
     /**
