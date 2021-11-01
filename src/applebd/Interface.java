@@ -105,8 +105,8 @@ public class Interface {
                     "%s\n" +
                     "\tBarcode: [%s]\n" +
                     "\tCategories: " + categories + "\n" +
-                    "\t%s - $c$f\n" +
-                    "\tSharable: $s",
+                    "\t%s - $%f\n" +
+                    "\tSharable: %s",
                     name, description, barcode, purDate, '$', purPrice, shareable.toString()
                     );
         }
