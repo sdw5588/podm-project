@@ -854,10 +854,28 @@ public class Interface {
      * @return - True if successful
      */
     public boolean returnTool(User user, String barcode) {
-        return executeStatement(String.format(
-                "delete from requests where barcode = '%s' and username = '%s'",
-                barcode, user.username
+        try {
+        PreparedStatement statement = conn.prepareStatement(String.format(
+            "SELECT * FROM requests WHERE username = '%s' and barcode = '%s'",
+            user.username, barcode
         ));
+        ResultSet result = statement.executeQuery();
+        result.next();
+
+        String request_id = result.getString("request_id");
+
+        if(executeStatement(String.format(
+                "delete from request_status where request_id = '%s'",
+                request_id
+            )))
+            executeStatement(String.format(
+                    "delete from requests where barcode = '%s' and username = '%s'",
+                    barcode, user.username
+            ));
+        } catch (SQLException e) {
+            return false;
+        }
+        return true;
     }
 
     /**
