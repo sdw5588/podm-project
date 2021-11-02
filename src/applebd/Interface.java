@@ -269,8 +269,8 @@ public class Interface {
     public boolean editTool(String barcode, Tool newTool) {
         return executeStatement(
                 String.format("UPDATE tool_info " +
-                "SET tool_name='%s', description='%s', purchase_date='%s', purchase_price=%s " +
-                "WHERE barcode='%s';", newTool.name, newTool.description, newTool.purDate, newTool.purPrice, barcode));
+                "SET tool_name='%s', description='%s', purchase_date='%s', purchase_price=%s, sharable='%s' " +
+                "WHERE barcode='%s';", newTool.name, newTool.description, newTool.purDate, newTool.purPrice, newTool.shareable, barcode));
     }
 
     /**
