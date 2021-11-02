@@ -227,9 +227,10 @@ public class Interface {
      */
     public boolean createTool(User user, Tool newTool){
         if(executeStatement(
-    "INSERT INTO tool_info (tool_name, description, purchase_date, purchase_price, username) " +
-            String.format("VALUES ('%s','%s','%s',%s,'%s');",
-            newTool.name, newTool.description, newTool.purDate, newTool.purPrice, user.username))
+    "INSERT INTO tool_info (tool_name, description, purchase_date, purchase_price, username, sharable) " +
+            String.format("VALUES ('%s','%s','%s',%s,'%s', %s);",
+            newTool.name, newTool.description, newTool.purDate, newTool.purPrice, user.username,
+            (newTool.shareable ? "true" : "false")))
         ){
             try{
                 PreparedStatement statement = conn.prepareStatement(String.format("" +
