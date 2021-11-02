@@ -629,15 +629,30 @@ public class Interface {
         return null;
     }
 
+    private boolean checkUserMatchesOwner(User user, String request_id) throws SQLException {
+        PreparedStatement statement = conn.prepareStatement(
+                String.format("SELECT COUNT(1) FROM requests WHERE request_id=%s AND owner_username='%s';", request_id, user.username));
+        ResultSet result = statement.executeQuery();
+        result.next();
+        return (!(result.getInt(1) == 1));
+    }
     /**
-     * TODO: Accepts a pending request only if the proper user is attempting to
+     * Accepts a pending request only if the proper user is attempting to
      *      example request.tool_owner = user
      * @param user - User attempting to accept request
      * @param request_id - request to accept
      * @return - True if successful
      */
-    public boolean acceptRequest(User user, String request_id) {
-        return false;
+    public boolean acceptRequest(User user, String request_id) throws SQLException {
+        // check if user matches tool_owner
+        if (!checkUserMatchesOwner(user, request_id)) {
+            return false;
+        }
+
+        // set request status to Accepted
+        executeStatement(String.format(
+                "UPDATE requests SET status='Accepted' WHERE request_id=%s;", request_id));
+        return true;
     }
 
     /**
