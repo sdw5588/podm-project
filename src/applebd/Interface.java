@@ -462,6 +462,57 @@ public class Interface {
     }
 
     /**
+     * Gets the tools owner
+     * @param barcode - tool to fetch
+     * @return - Tool's owner
+     */
+    public User getToolOwner(String barcode){
+        try{
+            PreparedStatement statement = conn.prepareStatement(
+                    String.format("SELECT username " +
+                            "FROM tool_info WHERE barcode = '%s';", barcode));
+            ResultSet result = statement.executeQuery();
+            result.next();
+
+            String tool_owner_username = result.getString("username");
+
+            return getUser(tool_owner_username);
+        } catch (SQLException e){
+            return null;
+        }
+    }
+
+    /**
+     * Gets tool info from the databse.
+     * @param barcode - tool to fetch
+     * @return - Tool info
+     */
+    public Tool getTool(String barcode){
+        try{
+            PreparedStatement statement = conn.prepareStatement(
+                    String.format("SELECT tool_name,description,purchase_date,purchase_price " +
+                            "FROM tool_info WHERE barcode = '%s';", barcode));
+            ResultSet result = statement.executeQuery();
+            result.next();
+
+            String tool_name = result.getString("tool_name");
+            String description = result.getString("description");
+            Date purchase_date = new Date(result.getString("purchase_date"));
+            float purchase_price = result.getFloat("purchase_price");
+            boolean sharable = result.getBoolean("sharable");
+
+            return new Tool(tool_name, description,
+                    barcode, getToolCategories(barcode),
+                    purchase_date, purchase_price,
+                    sharable
+            );
+        } catch (SQLException e){
+            return null;
+        }
+
+    }
+
+    /**
      * Retrieves the Tool information only if the tool belongs to the specified user
      * @param user - user to get the tool from
      * @param barcode - barcode of the tool to get
@@ -473,18 +524,7 @@ public class Interface {
             if (!checkUserBarcode(barcode, user.username)) {
                 return null;
             }
-            PreparedStatement statement = conn.prepareStatement(
-                    String.format("SELECT tool_name,description,purchase_date,purchase_price " +
-                            "FROM tool_info WHERE barcode = '%s';", barcode));
-            ResultSet result = statement.executeQuery();
-            result.next();
-
-            String tool_name = result.getString("tool_name");
-            String description = result.getString("description");
-            Date purchase_date = new Date(result.getString("purchase_date"));
-            float purchase_price = result.getFloat("purchase_price");
-
-            return new Tool(tool_name, description, barcode, getToolCategories(barcode), purchase_date, purchase_price, false);
+            return getTool(barcode);
         }
         catch(SQLException e){
             return null;
@@ -570,7 +610,13 @@ public class Interface {
      * @return True if successful
      */
     public boolean createBorrowRequest(User user, String barcode, Date requiredDate, int daysNeeded) {
-        return false;
+        User toolOwner = getToolOwner(barcode);
+
+        return executeStatement(String.format(
+            "INSERT INTO requests (username, barcode, date_required, expected_return_date, duration, real_return_date, owner_username)\n" +
+            "VALUES ('%s', '%s', '%s', '2000-01-01', %d, '2000-01-01', '%s')",
+            user.username, barcode, requiredDate, daysNeeded, toolOwner.username
+        ));
     }
 
     /**
