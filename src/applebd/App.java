@@ -182,7 +182,10 @@ public class App {
     });
 
     private TextMenuItem DeleteTool = new TextMenuItem("Delete Tool", () -> {
-        System.out.println("!!!!!Delete Tool!!!!!");
+        String barcode = prompt("Barcode of the tool you would like to delete: ");
+        if(!anInterface.deleteTool(barcode, user)){
+            System.out.println("There was an issue with your request.");
+        }
     });
 
     private TextMenuItem CreateCategory = new TextMenuItem("Create Category", () -> {

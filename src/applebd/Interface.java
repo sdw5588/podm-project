@@ -267,13 +267,21 @@ public class Interface {
     }
 
     /**
-     * Deletes a tool TODO: only if it is not a part of a request, also deletes all category entries
+     * Deletes a tool
      * @param barcode - tool to delete
      * @return - True on success
      * @throws SQLException
      */
-    public boolean deleteTool(String barcode) throws SQLException {
-        executeStatement(String.format("DELETE FROM tool_info WHERE barcode='%s';", barcode));
+    public boolean deleteTool(String barcode, User user)  {
+        try {
+            if (!checkUserBarcode(barcode, user.username)) {
+                return false;
+            }
+            executeStatement(String.format("DELETE FROM tool_category WHERE barcode=%s;", barcode));
+            executeStatement(String.format("DELETE FROM tool_info WHERE barcode=%s;", barcode));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return true;
     }
 
@@ -663,7 +671,6 @@ public class Interface {
     }
 
     /**
-     * TODO: Gets the list of all categories
      * @return - list of all categories
      */
     public Vector<String> getCategories() {
