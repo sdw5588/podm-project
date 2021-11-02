@@ -256,9 +256,19 @@ public class App {
         this.AllTools.run();
     });
 
+    private TextMenuItem AcceptRequest = new TextMenuItem("Accept Incoming Request", () -> {
+        String requestId = prompt("What request would you like to accept?");
+        anInterface.acceptRequest(user, requestId);
+    });
+
+    private TextMenuItem DenyRequest = new TextMenuItem("Deny Incoming Request", () -> {
+        String requestId = prompt("What request would you like to accept?");
+        anInterface.denyRequest(user, requestId);
+    });
+
     private TextMenuItem ReturnTool = new TextMenuItem("Return Tool", () -> {
-        //TODO
-        System.out.println("!!!!!Return Tool!!!!!");
+        String barcode = prompt("Barcode of the tool that you would like to return: ");
+        anInterface.returnTool(user, barcode);
     });
 
 
@@ -268,9 +278,22 @@ public class App {
             CreateRequest
     );
 
+    private Runnable printRequestsHead = () -> {
+        System.out.println("\n--~=={ Incoming Requests }==~--");
+        Vector<Interface.Request> requests = anInterface.getPendingUserRequests(user);
+        for(Interface.Request request : requests){
+            System.out.println(request);
+        }
+        System.out.println("\n--~=={ My Pending Requests }==~--");
+        requests = anInterface.getOutgoingPendingUserRequests(user);
+        for(Interface.Request request : requests){
+            System.out.println(request);
+        }
+        System.out.println("===============");
+    };
     private TextMenu Requests = new TextMenu(
-            "Requests", "\n--~=={ My Requests }==~--",
-            SearchTools, SortTools, AllTools, ReturnTool
+            "Requests", printRequestsHead,
+            SearchTools, SortTools, AllTools, AcceptRequest, DenyRequest, ReturnTool
     );
 
     private Runnable printCategoryHead = () -> {
@@ -290,6 +313,16 @@ public class App {
         System.out.println("\n--~=={ My Tools }==~--");
         Vector<Interface.Tool> userTools = anInterface.getUserTools(user);
         for (Interface.Tool tool : userTools) {
+            System.out.println(tool.toString());
+        }
+        System.out.println("--~=={ Borrowed Tools }==~--");
+        Vector<Interface.Tool> borrowedTools = anInterface.getUserBorrowedTools(user);
+        for (Interface.Tool tool : borrowedTools) {
+            System.out.println(tool.toString());
+        }
+        System.out.println("--~=={ Lent Tools }==~--");
+        Vector<Interface.Tool> lentTools = anInterface.getUserLentTools(user);
+        for (Interface.Tool tool : lentTools) {
             System.out.println(tool.toString());
         }
         System.out.println("===============");

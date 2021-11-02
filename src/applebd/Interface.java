@@ -5,7 +5,6 @@ import com.jcraft.jsch.Session;
 
 import java.sql.*;
 import java.text.SimpleDateFormat;
-import java.util.Collections;
 import java.util.Properties;
 import java.util.Vector;
 
@@ -135,6 +134,11 @@ public class Interface {
             this.req_date = req_date;
             this.duration = duration;
             this.status = status;
+        }
+
+        @Override
+        public String toString() {
+            return "id[" + request_id + "] " + requester + " is requesting barcode[" + tool_barcode + "] on " + req_date + " for " + duration + " days.";
         }
     }
 
@@ -490,7 +494,7 @@ public class Interface {
     public Tool getTool(String barcode){
         try{
             PreparedStatement statement = conn.prepareStatement(
-                    String.format("SELECT tool_name,description,purchase_date,purchase_price " +
+                    String.format("SELECT tool_name,description,purchase_date,purchase_price,sharable " +
                             "FROM tool_info WHERE barcode = '%s';", barcode));
             ResultSet result = statement.executeQuery();
             result.next();
@@ -610,23 +614,81 @@ public class Interface {
      * @return True if successful
      */
     public boolean createBorrowRequest(User user, String barcode, Date requiredDate, int daysNeeded) {
-        User toolOwner = getToolOwner(barcode);
+        Tool tool = getTool(barcode);
+        if(tool.shareable) {
+            User toolOwner = getToolOwner(barcode);
 
-        return executeStatement(String.format(
-            "INSERT INTO requests (username, barcode, date_required, expected_return_date, duration, real_return_date, owner_username)\n" +
-            "VALUES ('%s', '%s', '%s', '2000-01-01', %d, '2000-01-01', '%s')",
-            user.username, barcode, requiredDate, daysNeeded, toolOwner.username
-        ));
+            return executeStatement(String.format(
+                    "INSERT INTO requests (username, barcode, date_required, expected_return_date, duration, real_return_date, owner_username)\n" +
+                            "VALUES ('%s', '%s', '%s', '2000-01-01', %d, '2000-01-01', '%s')",
+                    user.username, barcode, requiredDate, daysNeeded, toolOwner.username
+            ));
+        }
+        else{
+            return false;
+        }
+    }
+
+    public Request getRequest(String requestId){
+        try{
+            PreparedStatement statement = conn.prepareStatement(
+            "select * from requests where request_id = " + requestId
+            );
+            ResultSet result = statement.executeQuery();
+            result.next();
+
+            REQUEST_STATUS status = REQUEST_STATUS.PENDING;
+            String statusStr = result.getString("status");
+            if(statusStr.equals("Accepted")) status = REQUEST_STATUS.ACCEPTED;
+            if(statusStr.equals("Denied")) status = REQUEST_STATUS.DENIED;
+
+            return new Request(
+                    result.getString("result_id"),
+                    result.getString("username"),
+                    result.getString("barcode"),
+                    result.getString("owner_username"),
+                    new Date(result.getString("date_required")),
+                    result.getInt("duration"),
+                    status
+            );
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     /**
-     * TODO: Fetches a list of requests a user has yet to respond to
+     * Fetches a list of requests a user has yet to respond to
      *      meaning tool_owner = user and status = pending
      * @param user - user to check
      * @return - Vector of Requests
      */
     public Vector<Request> getPendingUserRequests(User user) {
-        return null;
+        Vector<Request> requests = new Vector<>();
+
+        try{
+            PreparedStatement statement = conn.prepareStatement(
+                    "select * from requests where owner_username = '" + user.username + "' and status = 'Pending'"
+            );
+            ResultSet result = statement.executeQuery();
+            result.next();
+            while(!result.isAfterLast()) {
+                requests.add(new Request(
+                        result.getString("request_id"),
+                        result.getString("username"),
+                        result.getString("barcode"),
+                        result.getString("owner_username"),
+                        new Date(result.getString("date_required")),
+                        result.getInt("duration"),
+                        REQUEST_STATUS.PENDING
+                ));
+                result.next();
+            }
+            return requests;
+        } catch (SQLException e) {
+        }
+        return requests;
     }
 
     private boolean checkUserMatchesOwner(User user, String request_id) {
@@ -635,11 +697,45 @@ public class Interface {
                     String.format("SELECT COUNT(1) FROM requests WHERE request_id=%s AND owner_username='%s';", request_id, user.username));
             ResultSet result = statement.executeQuery();
             result.next();
-            return (!(result.getInt(1) == 1));
+            return (result.getInt(1) > 0);
         } catch (SQLException e) {
             return false;
         }
     }
+    /**
+     * Fetches a list of requests a user has yet to respond to
+     *      meaning tool_owner = user and status = pending
+     * @param user - user to check
+     * @return - Vector of Requests
+     */
+    public Vector<Request> getOutgoingPendingUserRequests(User user) {
+        Vector<Request> requests = new Vector<>();
+
+        try{
+            PreparedStatement statement = conn.prepareStatement(
+            "select * from requests where username = '" + user.username + "' and status = 'Pending'"
+            );
+            ResultSet result = statement.executeQuery();
+            result.next();
+
+            while(!result.isAfterLast()) {
+                requests.add(new Request(
+                        result.getString("request_id"),
+                        result.getString("username"),
+                        result.getString("barcode"),
+                        result.getString("owner_username"),
+                        new Date(result.getString("date_required")),
+                        result.getInt("duration"),
+                        REQUEST_STATUS.PENDING
+                ));
+                result.next();
+            }
+            return requests;
+        } catch (SQLException e) {
+        }
+        return requests;
+    }
+
     /**
      * Accepts a pending request only if the proper user is attempting to
      *      example request.tool_owner = user
@@ -655,12 +751,19 @@ public class Interface {
 
         // set request status to Accepted
         executeStatement(String.format(
-                "UPDATE requests SET status='Accepted' WHERE request_id=%s;", request_id));
+                "UPDATE requests SET status='Accepted' WHERE request_id=%s;",
+                request_id
+        ));
+        executeStatement(String.format(
+                "INSERT INTO request_status (request_id, previous_status, current_status, date_of_change)\n" +
+                "VALUES ('%s', 'Pending', 'Accepted', '%s')",
+                request_id, getCurrentDate()
+        ));
         return true;
     }
 
     /**
-     * TODO: Denies a pending request only if the proper user is attempting to
+     * Denies a pending request only if the proper user is attempting to
      *      example request.tool_owner = user
      * @param user - User attempting to accept request
      * @param request_id - request to deny
@@ -674,7 +777,14 @@ public class Interface {
 
         // set request status to Accepted
         executeStatement(String.format(
-                "UPDATE requests SET status='Denied' WHERE request_id=%s;", request_id));
+                "UPDATE requests SET status='Denied' WHERE request_id=%s;",
+                request_id
+        ));
+        executeStatement(String.format(
+                "INSERT INTO request_status (request_id, previous_status, current_status, date_of_change)\n" +
+                        "VALUES ('%s', 'Pending', 'Denied', '%s')",
+                request_id, getCurrentDate()
+        ));
         return true;
     }
 
@@ -688,31 +798,64 @@ public class Interface {
     }
 
     /**
-     * TODO: Gets a list of all the tools a user is borrowing
+     * Gets a list of all the tools a user is borrowing
      * @param user - user to check
      * @return Vector of tools
      */
     public Vector<Tool> getUserBorrowedTools(User user) {
-        return null;
+        Vector<Tool> tools = new Vector<>();
+
+        try{
+            PreparedStatement statement = conn.prepareStatement(
+            "select * from requests where username = '" + user.username + "' and status = 'Accepted'"
+            );
+            ResultSet result = statement.executeQuery();
+            result.next();
+            while(!result.isAfterLast()) {
+                tools.add(getTool(result.getString("barcode")));
+                result.next();
+            }
+            return tools;
+        } catch (SQLException e) {
+        }
+        return tools;
     }
 
     /**
-     * TODO: Gets a list of all the tools a user is lending out
+     * Gets a list of all the tools a user is lending out
      * @param user - user to check
      * @return Vector of tools
      */
     public Vector<Tool> getUserLentTools(User user) {
-        return null;
+        Vector<Tool> tools = new Vector<>();
+
+        try{
+            PreparedStatement statement = conn.prepareStatement(
+                    "select * from requests where owner_username = '" + user.username + "' and status = 'Accepted'"
+            );
+            ResultSet result = statement.executeQuery();
+            result.next();
+            while(!result.isAfterLast()) {
+                tools.add(getTool(result.getString("barcode")));
+                result.next();
+            }
+            return tools;
+        } catch (SQLException e) {
+        }
+        return tools;
     }
 
     /**
-     * TODO: Returns a tool to it's owner (deletes the request entry)
+     * Returns a tool to it's owner (deletes the request entry)
      * @param user - User attempting to return
      * @param barcode - Barcode of the tool
      * @return - True if successful
      */
     public boolean returnTool(User user, String barcode) {
-        return false;
+        return executeStatement(String.format(
+                "delete from requests where barcode = '%s' and username = '%s'",
+                barcode, user.username
+        ));
     }
 
     /**
