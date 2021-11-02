@@ -121,8 +121,9 @@ public class App {
             String description = prompt("New description, blank if unchanged: ");
             Interface.Date purDate = (Interface.Date)prompt("Purchase date, blank if unchanged: ", PROMPT_TYPE.DATE);
             Float purPrice = (Float)prompt("Purchase price, blank if unchanged: ", PROMPT_TYPE.FLOAT);
+            String response = prompt("Would you like to share this tool? (y/n):");
+            boolean share = response.startsWith("y");
 
-            Vector<String> categories = oldTool.categories;
             String choice = prompt("Would you like to add or remove any categories (add/remove): ").trim();
             if(choice.startsWith("add")){
                 // add categories
@@ -171,7 +172,7 @@ public class App {
                     oldTool.barcode, oldTool.categories,
                     purDate == null ? oldTool.purDate : purDate,
                     purPrice == null ? oldTool.purPrice : purPrice,
-                    oldTool.shareable
+                    share
             );
             if(!anInterface.editTool(barcode, newTool))
                 System.out.println("There was an issue with your request.");
@@ -183,7 +184,7 @@ public class App {
 
     private TextMenuItem DeleteTool = new TextMenuItem("Delete Tool", () -> {
         String barcode = prompt("Barcode of the tool you would ike to delete: ");
-
+        anInterface.deleteTool(barcode, user);
     });
 
     private TextMenuItem CreateCategory = new TextMenuItem("Create Category", () -> {
@@ -258,7 +259,8 @@ public class App {
 
     private TextMenuItem AcceptRequest = new TextMenuItem("Accept Incoming Request", () -> {
         String requestId = prompt("What request would you like to accept?");
-        anInterface.acceptRequest(user, requestId);
+        Interface.Date returnDate = (Interface.Date)prompt("When do you need to tool back? (MM/DD/YYYY) ", PROMPT_TYPE.DATE);
+        anInterface.acceptRequest(user, requestId, returnDate);
     });
 
     private TextMenuItem DenyRequest = new TextMenuItem("Deny Incoming Request", () -> {

@@ -138,7 +138,9 @@ public class Interface {
 
         @Override
         public String toString() {
-            return "id[" + request_id + "] " + requester + " is requesting barcode[" + tool_barcode + "] on " + req_date + " for " + duration + " days.";
+            return "id[" + request_id + "] " + requester +
+                    " is requesting barcode[" + tool_barcode + "] from " + tool_owner + " on " +
+                    req_date + " for " + duration + " days.";
         }
     }
 
@@ -743,22 +745,22 @@ public class Interface {
      * @param request_id - request to accept
      * @return - True if successful
      */
-    public boolean acceptRequest(User user, String request_id) {
+    public boolean acceptRequest(User user, String request_id, Date returnDate) {
         // check if user matches tool_owner
         if (!checkUserMatchesOwner(user, request_id)) {
             return false;
         }
 
         // set request status to Accepted
-        executeStatement(String.format(
-                "UPDATE requests SET status='Accepted' WHERE request_id=%s;",
-                request_id
-        ));
-        executeStatement(String.format(
-                "INSERT INTO request_status (request_id, previous_status, current_status, date_of_change)\n" +
-                "VALUES ('%s', 'Pending', 'Accepted', '%s')",
-                request_id, getCurrentDate()
-        ));
+        if (executeStatement(String.format(
+                "UPDATE requests SET status='Accepted', real_return_date='%s' WHERE request_id=%s;",
+                returnDate, request_id
+        )))
+            executeStatement(String.format(
+                    "INSERT INTO request_status (request_id, previous_status, current_status, date_of_change)\n" +
+                    "VALUES ('%s', 'Pending', 'Accepted', '%s')",
+                    request_id, getCurrentDate()
+            ));
         return true;
     }
 
