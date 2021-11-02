@@ -878,7 +878,7 @@ public class Interface {
                 tools.add(new Tool(result.getString("tool_name"), result.getString("description"),
                         barcode, categories,
                         new Date(result.getString("purchase_date")), result.getFloat("purchase_price"),
-                        false));
+                        result.getBoolean("sharable")));
                 result.next();
             }
             return tools;
@@ -966,7 +966,7 @@ public class Interface {
                     tools.add(new Tool(result.getString("tool_name"), result.getString("description"),
                             barcode, categories,
                             new Date(result.getString("purchase_date")), result.getFloat("purchase_price"),
-                            false));
+                            result.getBoolean("sharable")));
                     result.next();
                 }
             }
@@ -993,7 +993,7 @@ public class Interface {
                 Tool tool = new Tool(result.getString("tool_name"), result.getString("description"),
                         barcode, categories,
                         new Date(result.getString("purchase_date")), result.getFloat("purchase_price"),
-                        false
+                        result.getBoolean("sharable")
                 );
                 System.out.println(tool.toString());
                 result.next();
@@ -1036,7 +1036,7 @@ public class Interface {
                 Tool tool = new Tool(result.getString("tool_name"), result.getString("description"),
                         barcode, categories,
                         new Date(result.getString("purchase_date")), result.getFloat("purchase_price"),
-                        false
+                        result.getBoolean("sharable")
                 );
                 System.out.println("\t" + tool);
                 result.next();
