@@ -198,7 +198,6 @@ public class App {
     });
 
     private TextMenuItem SearchTools = new TextMenuItem("Search Tools", () -> {
-        //TODO
         Interface.ToolParts searchPart = null;
         do {
             String part = prompt("What would you like to search? (Barcode, Name, or Category) ");
@@ -215,14 +214,36 @@ public class App {
         String argument = prompt("What would you like to search? ");
 
         internalTools = anInterface.searchTools(searchPart, argument);
-        this.allToolsResult.run();
+        System.out.println("\n--~=={ Search Results }==~--");
+        for (Interface.Tool tool : internalTools) {
+            System.out.println(tool.toString());
+        }
+        this.AllTools.run();
     });
 
     private TextMenuItem SortTools = new TextMenuItem("Sort Tools", () -> {
-        System.out.println("!!!!!Sort Tools!!!!!");
-        //TODO
-        internalTools = anInterface.sortTools(Interface.ToolParts.NAME, true);
-        this.allToolsResult.run();
+        Interface.ToolParts searchPart = null;
+        do {
+            String part = prompt("What would you like to sort by? (name or category) ");
+            if (part.trim().toLowerCase().equals("name"))
+                searchPart = Interface.ToolParts.NAME;
+            else if (part.trim().toLowerCase().equals("category"))
+                searchPart = Interface.ToolParts.CATEGORY;
+            else
+                System.out.println("Unknown response.");
+        } while (searchPart == null);
+
+        String option = prompt("Ascending or Decending");
+        boolean ascending = option.trim().toLowerCase().startsWith("asc");
+        System.out.println("\n--~=={ Search Results }==~--");
+
+        if(searchPart == Interface.ToolParts.NAME){
+            anInterface.sortToolsName(ascending);
+        }
+        else{
+            anInterface.sortToolsCategory(ascending);
+        }
+        this.AllTools.run();
     });
 
     private TextMenuItem ReturnTool = new TextMenuItem("Return Tool", () -> {
@@ -232,20 +253,8 @@ public class App {
 
 
     // Menu Items
-    private Runnable printSearchHead = () -> {
-        System.out.println("\n--~=={ Results }==~--");
-        for (Interface.Tool tool : internalTools) {
-            System.out.println(tool.toString());
-        }
-        System.out.println("===============");
-    };
-    private TextMenu allToolsResult = new TextMenu(
-            "internal-search-tools", printSearchHead,
-            CreateRequest
-    );
-
     private TextMenu AllTools = new TextMenu(
-            "All Tools", "\n--~=={ All Tools }==~--",
+            "All Tools", "===============",
             CreateRequest
     );
 

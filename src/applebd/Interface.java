@@ -706,37 +706,27 @@ public class Interface {
             String searchPart = "";
             if(searchParam == ToolParts.NAME) searchPart = "tool_name";
             if(searchParam == ToolParts.BARCODE) searchPart = "CAST(barcode AS VARCHAR(40))";
+            PreparedStatement statement = null;
 
             if(!searchPart.equals("")){
-                PreparedStatement statement = conn.prepareStatement(String.format(
+                statement = conn.prepareStatement(String.format(
                     "SELECT * FROM tool_info WHERE LOWER(%s) LIKE '%%%s%%'",
                     searchPart, searchArgument.toLowerCase()
                 ));
-                System.out.println(statement.toString());
-                ResultSet result = statement.executeQuery();
-                result.next();
-                while(!result.isAfterLast()){
-                    String barcode = result.getString("barcode");
-                    Vector<String> categories = getToolCategories(barcode);
-                    tools.add(new Tool(result.getString("tool_name"), result.getString("description"),
-                            barcode, categories,
-                            new Date(result.getString("purchase_date")), result.getFloat("purchase_price"),
-                            false));
-                    result.next();
-                }
-                return tools;
             }
 
             if(searchParam == ToolParts.CATEGORY){
-                PreparedStatement statement = conn.prepareStatement(String.format(
+                statement = conn.prepareStatement(String.format(
                         "SELECT * FROM tool_info INNER JOIN tool_category tc on tool_info.barcode = tc.barcode\n" +
                         "WHERE LOWER(category_name) LIKE '%%%s%%'",
                         searchArgument.toLowerCase()
                 ));
-                System.out.println(statement.toString());
+            }
+
+            if(statement != null) {
                 ResultSet result = statement.executeQuery();
                 result.next();
-                while(!result.isAfterLast()){
+                while (!result.isAfterLast()) {
                     String barcode = result.getString("barcode");
                     Vector<String> categories = getToolCategories(barcode);
                     tools.add(new Tool(result.getString("tool_name"), result.getString("description"),
@@ -745,30 +735,81 @@ public class Interface {
                             false));
                     result.next();
                 }
-                return tools;
             }
-
-
         } catch (SQLException ignored){}
 
         return tools;
     }
 
     /**
-     * TODO: Sorts all tools based on part
-     * @param searchParam - Part of the tool to sort by
+     * TODO: Sorts all tools based on name
      * @param ascending - ascending or decending
      * @return - Sorted Vector of tools
      */
-    public Vector<Tool> sortTools (ToolParts searchParam, Boolean ascending) {
-        Vector<Tool> tools = new Vector<>();
-        tools.add(new Tool("SortTool1", "", null,
-                new Date(2, 28, 2015), 15.43f, true));
-        tools.add(new Tool("SortTool2", "", null,
-                new Date(2, 28, 2015), 15.43f, true));
-        tools.add(new Tool("SortTool3", "", null,
-                new Date(2, 28, 2015), 15.43f, true));
+    public boolean sortToolsName (Boolean ascending) {
+        try {
+            PreparedStatement statement = conn.prepareStatement(
+            "SELECT * FROM tool_info ORDER BY tool_name " + (ascending ? "ASC" : "DESC")
+            );
+            ResultSet result = statement.executeQuery();
+            result.next();
+            while(!result.isAfterLast()){
+                String barcode = result.getString("barcode");
+                Vector<String> categories = getToolCategories(barcode);
+                Tool tool = new Tool(result.getString("tool_name"), result.getString("description"),
+                        barcode, categories,
+                        new Date(result.getString("purchase_date")), result.getFloat("purchase_price"),
+                        false
+                );
+                System.out.println(tool.toString());
+                result.next();
+            }
+            return true;
+        } catch (SQLException e) {
+            return false;
+        }
+    }
 
-        return tools;
+    /**
+     * TODO: Sorts all tools based on category
+     * @param ascending - ascending or decending
+     * @return - Sorted Vector of tools
+     */
+    public boolean sortToolsCategory (Boolean ascending) {
+        Vector<Tool> tools = new Vector<>();
+
+        try{
+            PreparedStatement statement = conn.prepareStatement(String.format(
+                "SELECT * FROM tool_info LEFT JOIN tool_category tc on tool_info.barcode = tc.barcode\n" +
+                "ORDER BY category_name %s",
+                ascending ? "ASC" : "DESC"
+            ));
+            ResultSet result = statement.executeQuery();
+
+            String currentCategory = "";
+            result.next();
+            while(!result.isAfterLast()){
+                String upcomingCategory = result.getString("category_name");
+                if(upcomingCategory == null)
+                    upcomingCategory = "NO CATEGORIES";
+                if(!upcomingCategory.equals(currentCategory)){
+                    System.out.println(upcomingCategory);
+                    currentCategory = upcomingCategory;
+                }
+
+                String barcode = result.getString("barcode");
+                Vector<String> categories = getToolCategories(barcode);
+                Tool tool = new Tool(result.getString("tool_name"), result.getString("description"),
+                        barcode, categories,
+                        new Date(result.getString("purchase_date")), result.getFloat("purchase_price"),
+                        false
+                );
+                System.out.println("\t" + tool);
+                result.next();
+            }
+            return true;
+        } catch(SQLException ignored){
+            return false;
+        }
     }
 }
