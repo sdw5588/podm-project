@@ -182,7 +182,8 @@ public class App {
     });
 
     private TextMenuItem DeleteTool = new TextMenuItem("Delete Tool", () -> {
-        System.out.println("!!!!!Delete Tool!!!!!");
+        String barcode = prompt("Barcode of the tool you would ike to delete: ");
+
     });
 
     private TextMenuItem CreateCategory = new TextMenuItem("Create Category", () -> {
@@ -193,8 +194,17 @@ public class App {
     });
 
     private TextMenuItem CreateRequest = new TextMenuItem("Create Request", () -> {
-        //TODO
-        System.out.println("!!!!!Create Request!!!!!");
+        String barcode = prompt("What tool would you like to borrow (barcode)? ");
+        Interface.Date date = (Interface.Date)prompt("When do you need the tool? (MM/DD/YYYY) ", PROMPT_TYPE.DATE);
+        int duration = -1;
+        while(duration < 0) {
+            String strDuration = prompt("How many days do you need the tool for? ");
+            duration = Integer.parseInt(strDuration);
+        }
+
+        if(!anInterface.createBorrowRequest(user, barcode, date, duration)){
+            System.out.println("There was an error with your request.");
+        }
     });
 
     private TextMenuItem SearchTools = new TextMenuItem("Search Tools", () -> {
