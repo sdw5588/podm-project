@@ -224,21 +224,31 @@ public class Interface {
      * @param user - user who owns the tool
      * @param newTool - tool to create (barcode ignored)
      * @return - True on success
-     * @throws SQLException
      */
     public boolean createTool(User user, Tool newTool){
-        String barcode = "0";
         if(executeStatement(
     "INSERT INTO tool_info (tool_name, description, purchase_date, purchase_price, username) " +
             String.format("VALUES ('%s','%s','%s',%s,'%s');",
             newTool.name, newTool.description, newTool.purDate, newTool.purPrice, user.username))
         ){
-            boolean success = true;
-            for(String cat : newTool.categories){
-                if(!addToolToCategory(newTool.barcode, cat.trim()))
-                    success = false;
+            try{
+                PreparedStatement statement = conn.prepareStatement(String.format("" +
+                    "SELECT * FROM tool_info WHERE tool_name = '%s' AND description = '%s' AND username = '%s'",
+                    newTool.name, newTool.description, user.username
+                ));
+                ResultSet result = statement.executeQuery();
+                result.next();
+                String barcode = result.getString("barcode");
+
+                boolean success = true;
+                for(String cat : newTool.categories){
+                    if(!addToolToCategory(barcode, cat.trim()))
+                        success = false;
+                }
+                return success;
+            } catch(SQLException e){
+                return false;
             }
-            return success;
         }
         return false;
     }
