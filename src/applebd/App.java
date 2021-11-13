@@ -264,7 +264,7 @@ public class App {
     });
 
     private TextMenuItem DenyRequest = new TextMenuItem("Deny Incoming Request", () -> {
-        String requestId = prompt("What request would you like to accept?");
+        String requestId = prompt("What request would you like to deny?");
         anInterface.denyRequest(user, requestId);
     });
 
@@ -273,6 +273,11 @@ public class App {
         anInterface.returnTool(user, barcode);
     });
 
+    private TextMenuItem Dashboard = new TextMenuItem("Dashboard", () -> {
+        System.out.println("Number of tools available from catalog: " + anInterface.countAvailableTools(user));
+        System.out.println("Number of lent tools: " + anInterface.countLentTools(user));
+        System.out.println("Number of borrowed tools: " + anInterface.countBorrowedTools(user));
+    });
 
     // Menu Items
     private TextMenu AllTools = new TextMenu(
@@ -295,7 +300,7 @@ public class App {
     };
     private TextMenu Requests = new TextMenu(
             "Requests", printRequestsHead,
-            SearchTools, SortTools, AllTools, AcceptRequest, DenyRequest, ReturnTool
+            SearchTools, SortTools, AllTools, AcceptRequest, DenyRequest, ReturnTool, Dashboard
     );
 
     private Runnable printCategoryHead = () -> {

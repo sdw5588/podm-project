@@ -1066,4 +1066,60 @@ public class Interface {
             return false;
         }
     }
+
+    /**
+     * returns the number of sharable tools that are not being borrowed
+     * @param user logged-in user
+     */
+    public int countAvailableTools(User user) {
+        try {
+            PreparedStatement statement = conn.prepareStatement(String.format(
+                    "SELECT COUNT(*) FROM tool_info WHERE sharable='true' AND username='%s';", user.username
+                    ));
+            ResultSet result = statement.executeQuery();
+            result.next();
+            int sharableTools = result.getInt("count");
+            int lentTools = countLentTools(user);
+            return sharableTools - lentTools;
+        }
+        catch(SQLException e){
+            return -1;
+        }
+    }
+
+    /**
+     * returns the number of lent tools
+     * @param user logged-in user
+     */
+    public int countLentTools(User user) {
+        try {
+            PreparedStatement statement = conn.prepareStatement(String.format(
+                    "SELECT COUNT(*) FROM requests WHERE status='Accepted' AND owner_username='%s';", user.username
+            ));
+            ResultSet result = statement.executeQuery();
+            result.next();
+            return result.getInt("count");
+        }
+        catch(SQLException e){
+            return -1;
+        }
+    }
+
+    /**
+     * returns the number of borrowed tools
+     * @param user logged-in user
+     */
+    public int countBorrowedTools(User user) {
+        try {
+            PreparedStatement statement = conn.prepareStatement(String.format(
+                    "SELECT COUNT(*) FROM requests WHERE status='Accepted' AND username='%s';", user.username
+            ));
+            ResultSet result = statement.executeQuery();
+            result.next();
+            return result.getInt("count");
+        }
+        catch(SQLException e){
+            return -1;
+        }
+    }
 }
