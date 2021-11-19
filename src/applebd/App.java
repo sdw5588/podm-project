@@ -206,6 +206,13 @@ public class App {
         if(!anInterface.createBorrowRequest(user, barcode, date, duration)){
             System.out.println("There was an error with your request.");
         }
+
+        // prints statistics
+        internalTools = anInterface.topBorrowed(user);
+        System.out.println("\n--~=={ Top 10 Most Borrowed Tools }==~--");
+        for (Interface.Tool tool : internalTools) {
+            System.out.println(tool.toString());
+        }
     });
 
     private TextMenuItem SearchTools = new TextMenuItem("Search Tools", () -> {

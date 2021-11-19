@@ -864,6 +864,7 @@ public class Interface {
 
         String request_id = result.getString("request_id");
 
+        /*
         if(executeStatement(String.format(
                 "delete from request_status where request_id = '%s'",
                 request_id
@@ -872,6 +873,12 @@ public class Interface {
                     "delete from requests where barcode = '%s' and username = '%s'",
                     barcode, user.username
             ));
+
+         */
+
+        executeStatement(String.format(
+                "UPDATE requests SET returned='Returned' WHERE request_id=%s;", request_id));
+
         } catch (SQLException e) {
             return false;
         }
@@ -991,6 +998,38 @@ public class Interface {
                 }
             }
         } catch (SQLException ignored){}
+
+        return tools;
+    }
+
+    /**
+     * returns a list of the user's most frequently borrowed tools
+     * @param user
+     * @return vector of up to 10 of the user's most borrowed tools
+     */
+    public Vector<Tool> topBorrowed (User user) {
+        Vector<Tool> tools = new Vector<>();
+        try {
+            PreparedStatement statement = conn.prepareStatement(String.format(
+                    "SELECT COUNT(*) FROM requests WHERE status='Accepted' AND username='%s'",
+                    user.username
+            ));
+            ResultSet result = statement.executeQuery();
+            result.next();
+            int row = result.getInt("count");
+
+            statement = conn.prepareStatement(String.format(
+                    "SELECT barcode FROM requests WHERE status='Accepted' AND username='%s' GROUP BY barcode ORDER BY COUNT(*) DESC LIMIT 10;",
+                    user.username
+            ));
+            result = statement.executeQuery();
+            result.next();
+            for (int i = 0; i < row; i++) {
+                String barcode = result.getString("barcode");
+                tools.add(getTool(barcode));
+                result.next();
+            }
+        } catch (SQLException ignored) {}
 
         return tools;
     }
