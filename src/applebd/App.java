@@ -207,6 +207,14 @@ public class App {
             System.out.println("There was an error with your request.");
         }
 
+        // Recommends tools that are frequently borrowed along with the previous one
+        System.out.println("\n--~=={ Recommendations }==~--");
+        System.out.println("Tools frequently borrowed together with the requested tool: ");
+        internalTools = anInterface.recommendTools(barcode);
+        for (Interface.Tool tool : internalTools) {
+            System.out.println(tool);
+        }
+
     });
 
     private TextMenuItem SearchTools = new TextMenuItem("Search Tools", () -> {

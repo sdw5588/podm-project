@@ -1220,4 +1220,27 @@ public class Interface {
             return -1;
         }
     }
+
+    public Vector<Tool> recommendTools(String barcode) {
+        try {
+            PreparedStatement statement = conn.prepareStatement("" +
+                    "SELECT barcode FROM tool_info\n" +
+                    "WHERE sharable='true'\n" +
+                    "ORDER BY RANDOM()\n" +
+                    "LIMIT 5;");
+            ResultSet result = statement.executeQuery();
+            result.next();
+
+            Vector<Tool> tools = new Vector<>();
+            for (int i = 0; i < 5; i++) {
+                tools.add(getTool(result.getString("barcode")));
+                result.next();
+            }
+            return tools;
+        }
+        catch (SQLException e){
+
+        }
+        return null;
+    }
 }

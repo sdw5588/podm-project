@@ -45,7 +45,7 @@ public class TextMenu extends TextMenuItem {
         for (TextMenuItem item : items) {
             System.out.println((option++)+" - "+item.getTitle());
         }
-        System.out.print("Select Option: ");
+        System.out.print("\nSelect Option: ");
         System.out.flush();
     }
 
