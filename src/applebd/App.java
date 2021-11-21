@@ -207,12 +207,6 @@ public class App {
             System.out.println("There was an error with your request.");
         }
 
-        // prints statistics
-        internalTools = anInterface.topBorrowed(user);
-        System.out.println("\n--~=={ Top 10 Most Borrowed Tools }==~--");
-        for (Interface.Tool tool : internalTools) {
-            System.out.println(tool.toString());
-        }
     });
 
     private TextMenuItem SearchTools = new TextMenuItem("Search Tools", () -> {
@@ -286,6 +280,24 @@ public class App {
         System.out.println("Number of borrowed tools: " + anInterface.countBorrowedTools(user));
     });
 
+    private TextMenuItem Statistics = new TextMenuItem("Statistics", () -> {
+        System.out.println("\n--~=={ Top 10 Most Borrowed Tools }==~--");
+        internalTools = anInterface.topBorrowed(user);
+        if (!(internalTools==null)) {
+            for (Interface.Tool tool : internalTools) {
+                System.out.println(tool.toString());
+            }
+        }
+
+        System.out.println("\n--~=={ Top 10 Most Lent Tools }==~--");
+        Vector results[] = anInterface.topLent(user);
+        internalTools = results[0];
+        Vector averages = results[1];
+        for (int i = 0; i < internalTools.size(); i++) {
+            System.out.println(internalTools.get(i) + ",  Average lent time: " + averages.get(i) + " days");
+        }
+    });
+
     // Menu Items
     private TextMenu AllTools = new TextMenu(
             "All Tools", "===============",
@@ -307,7 +319,7 @@ public class App {
     };
     private TextMenu Requests = new TextMenu(
             "Requests", printRequestsHead,
-            SearchTools, SortTools, AllTools, AcceptRequest, DenyRequest, ReturnTool, Dashboard
+            SearchTools, SortTools, AllTools, AcceptRequest, DenyRequest, ReturnTool, Dashboard, Statistics
     );
 
     private Runnable printCategoryHead = () -> {

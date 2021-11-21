@@ -1010,6 +1010,7 @@ public class Interface {
     public Vector<Tool> topBorrowed (User user) {
         Vector<Tool> tools = new Vector<>();
         try {
+            // counts rows
             PreparedStatement statement = conn.prepareStatement(String.format(
                     "SELECT COUNT(*) FROM requests WHERE status='Accepted' AND username='%s'",
                     user.username
@@ -1017,6 +1018,7 @@ public class Interface {
             ResultSet result = statement.executeQuery();
             result.next();
             int row = result.getInt("count");
+            if (row > 10) {row=10;}
 
             statement = conn.prepareStatement(String.format(
                     "SELECT barcode FROM requests WHERE status='Accepted' AND username='%s' GROUP BY barcode ORDER BY COUNT(*) DESC LIMIT 10;",
@@ -1032,6 +1034,63 @@ public class Interface {
         } catch (SQLException ignored) {}
 
         return tools;
+    }
+
+    /**
+     * returns a list of the user's top 10 most lent tools and the percentage of time lent
+     * @param user current user
+     * @return
+     */
+    public Vector[] topLent(User user) {
+        try {
+            // counts rows
+            PreparedStatement statement = conn.prepareStatement(String.format(
+                    "SELECT COUNT(*) FROM requests WHERE status='Accepted' AND owner_username='%s'",
+                    user.username
+            ));
+            ResultSet result = statement.executeQuery();
+            result.next();
+            int row = result.getInt("count");
+            if (row > 10) {row=10;}
+
+            // gets percentage of time lent over time available
+            statement = conn.prepareStatement(String.format("" +
+                    "SELECT barcode, duration_sum/count as average, " +
+                    "(duration_sum/DATE_PART('day', CURRENT_DATE::timestamp - purchase_date::timestamp)) as percentage " +
+                    "FROM tool_info, " +
+                    "(SELECT " +
+                    "   barcode AS barcode_requests, " +
+                    "   SUM(duration) AS duration_sum, " +
+                    "   count(*) as count " +
+                    "FROM " +
+                    "  requests " +
+                    "WHERE owner_username='%s' AND status='Accepted' " +
+                    "GROUP BY " +
+                    "   barcode) as total_duration " +
+                    "WHERE barcode=barcode_requests " +
+                    "ORDER BY percentage DESC " +
+                    "LIMIT 10;",
+                    user.username
+
+            ));
+            result = statement.executeQuery();
+            result.next();
+
+            // adds tools
+            Vector<Tool> tools = new Vector<>();
+            Vector<String> averages = new Vector<>();
+            for (int i = 0; i < row; i++) {
+                String barcode = result.getString("barcode");
+                tools.add(getTool(barcode));
+                averages.add(result.getString("average"));
+                result.next();
+            }
+
+            Vector results[] = {tools, averages};
+            return results;
+
+        } catch (SQLException ignored) {}
+        return null;
     }
 
     /**
